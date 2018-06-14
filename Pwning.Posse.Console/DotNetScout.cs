@@ -4,10 +4,18 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
+
 namespace Pwning.Posse.CommandLine
 {
     class DotNetScout
     {
+        public static bool IsFileType(string path, string fileFilter)
+        {
+            var filters = fileFilter.Split(';');
+            var isMatch = filters.All(x => path.EndsWith(x));
+
+            return isMatch;
+        }
         public static bool IsDotNetAssembly(string path)
         {
             var isDotNetAssembly = true;
@@ -21,31 +29,29 @@ namespace Pwning.Posse.CommandLine
             }
             catch(FileLoadException ex)
             {
+                //Triggered by permissions
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"Error yo {ex.Message}");
                 Console.ResetColor();
-
-                //Triggered by permissions
+               
                 //TODO: Add verbose logging
                 isDotNetAssembly = false;
             }
 
             return isDotNetAssembly;
-        }
+        }        
 
-        public static List<string> FindFiles(string currentFolder)
+        public static List<string> FindFiles(string currentFolder, string fileFilter)
         {
             Console.WriteLine($"Searching {currentFolder}");
 
-            List<string> fileList = new List<string>(Directory.GetFiles(currentFolder)
-                .Where(x => x.EndsWith(".dll") || x.EndsWith(".exe"))
-                .Where(path => IsDotNetAssembly(path)));
+            List<string> fileList = new List<string>(Directory.GetFiles(currentFolder).Where(x => IsFileType(x, fileFilter)));
 
             Directory.GetDirectories(currentFolder).AsParallel().ForAll(x =>
             {
                 try
                 {
-                    fileList.AddRange(FindFiles(x));
+                    fileList.AddRange(FindFiles(x, fileFilter));
                 }
                 catch (Exception ex)
                 {
