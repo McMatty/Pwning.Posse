@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace Pwning.Posse.Common
 {
-    public static class Utilites
+    public static class StaticAnalysisUtilites
     {
         public static Location GetLocation(ISymbol declaredSymbol, Solution solution)
         {

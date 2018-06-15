@@ -95,8 +95,8 @@ namespace Pwning.Posse.Tracker
                 if ((localDeclaration as ILocalSymbol).Type.Name.Equals(_serializerSettings))
                 {
                     var location            = settingsArgument.GetLocation();
-                    var typeHandlerSetting  = Utilites.FindAssignmentExpressionSyntax(location, _typeName);
-                    var binderSetting       = Utilites.FindAssignmentExpressionSyntax(location, _binderSetting);
+                    var typeHandlerSetting  = StaticAnalysisUtilites.FindAssignmentExpressionSyntax(location, _typeName);
+                    var binderSetting       = StaticAnalysisUtilites.FindAssignmentExpressionSyntax(location, _binderSetting);
                     var hasAutoTypeSetting  = IsAssignedValue(typeHandlerSetting, _typeName, _typeNameSetting);
                     var hasSerialBinder     = IsAssignedSerialBinder(binderSetting, context);
                     isVulnerable            = hasAutoTypeSetting && !hasSerialBinder;

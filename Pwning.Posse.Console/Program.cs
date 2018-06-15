@@ -12,6 +12,9 @@ using System.ServiceProcess;
 using System.Management;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Reflection.Metadata;
+using ICSharpCode.Decompiler;
+using ICSharpCode.Decompiler.CSharp;
 
 namespace Pwning.Posse.CommandLine
 {
@@ -20,18 +23,24 @@ namespace Pwning.Posse.CommandLine
         [DllImport("user32.dll")]
         public static extern bool ShowWindow(System.IntPtr hWnd, int cmdShow);
 
-        private static Dictionary<String, String> _userOptions = new Dictionary<string, string>();
-        private static List<string> _validOptions = new List<string> {"sln_folder"};
+        private static Dictionary<String, String> _userOptions          = new Dictionary<string, string>();
+        private static List<string> _validOptions                       = new List<string> {"target_folder", "target_bin"};
+        private static Dictionary<string, string> _dotNetAssemblyPaths  = new Dictionary<string, string>();
 
         static void RenderMenu()
         {
+            var target          = _userOptions.ContainsKey("target_folder") ? _userOptions["target_folder"] : "<target not set>";
+            var assemblyPath    = _userOptions.ContainsKey("target_bin") ? _userOptions["target_bin"] : "<target not set>";
+
             Console.WriteLine();
             Console.ForegroundColor = ConsoleColor.DarkGreen;
             Console.WriteLine("Select one of the options below:");
             Console.WriteLine("1. Scan machine for .Net assemblies");
-            Console.WriteLine("2. Scan target .Net assembly for vulnerabilities");
+            Console.WriteLine($"2. Scan {target} .Net assembly for vulnerabilities");
             Console.WriteLine("3. List services running .Net assemblies");
             Console.WriteLine("4. Set console options");
+            Console.WriteLine($"5. Decompile {assemblyPath}");
+            Console.WriteLine("6. List decompiled assemblies and their project location");
             Console.WriteLine("0. Exit");
             Console.ResetColor();
         }
@@ -68,17 +77,7 @@ namespace Pwning.Posse.CommandLine
                         }
                     case '2':
                         {
-                            if (_userOptions.ContainsKey("sln_folder"))
-                            {
-                                FindDotNetVulnerabilities(_userOptions["sln_folder"]);
-                            }
-                            else
-                            {
-                                Console.WriteLine("'sln_folder' not set. Defaulting to root folder.");
-                                var solutionFolder = Directory.GetDirectoryRoot(Assembly.GetExecutingAssembly().Location);
-                                FindDotNetVulnerabilities(solutionFolder);
-                            }
-                            
+                            ScanFolderForVulnerabilities();
                             break;
                         }                    
                     case '3':
@@ -91,6 +90,16 @@ namespace Pwning.Posse.CommandLine
                             SetConsoleOption();
                             break;
                         }
+                    case '5':
+                        {
+                            DecompileTarget();
+                            break;
+                        }
+                    case '6':
+                        {
+                            ListDecompiledAssemblies();
+                            break;
+                        }
                     default:
                         {
                             Console.ForegroundColor = ConsoleColor.Red;
@@ -101,6 +110,69 @@ namespace Pwning.Posse.CommandLine
                 }
 
                 RenderMenu();
+            }
+        }
+
+        private static void ListDecompiledAssemblies()
+        {
+            if (_dotNetAssemblyPaths.Keys.Count <= 0)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"No paths have been added");
+                Console.ResetColor();
+            }
+
+            _dotNetAssemblyPaths.Keys.AsParallel()
+                .Where(x => !string.IsNullOrEmpty(_dotNetAssemblyPaths[x]))
+                .ForAll(bin => Console.WriteLine($"Assembly {bin} is decompiled in {_dotNetAssemblyPaths[bin]}"));
+        }
+
+        private static void ScanFolderForVulnerabilities()
+        {
+            if (_userOptions.ContainsKey("target_folder"))
+            {
+                FindDotNetVulnerabilities(_userOptions["target_folder"]);
+            }
+            else
+            {
+                Console.WriteLine("'target_folder' not set. Defaulting to root folder.");
+                var projectFolder = Directory.GetDirectoryRoot(Assembly.GetExecutingAssembly().Location);
+                Console.WriteLine($"'target_folder' not set. Defaulting to root folder '{projectFolder}'");
+                FindDotNetVulnerabilities(projectFolder);
+            }
+        }
+
+        private static void DecompileTarget()
+        {
+            if (_userOptions.ContainsKey("target_bin"))
+            {
+                var assemblyFileName                =_userOptions["target_bin"];
+                var module                          = UniversalAssemblyResolver.LoadMainModule(assemblyFileName);
+                WholeProjectDecompiler decompiler   = new WholeProjectDecompiler();
+                var outputDirectory                 = FileUtilities.GetTemporaryDirectory();
+
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"Decompiling {assemblyFileName} ");
+                Console.ResetColor();
+
+                try
+                {
+                    decompiler.DecompileProject(module, outputDirectory);
+                    _dotNetAssemblyPaths[assemblyFileName] = outputDirectory;
+                    _userOptions["target_folder"] = outputDirectory;
+                }
+                catch
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine($"Decompiling {assemblyFileName} threw an exception");
+                    Console.ResetColor();
+                }
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"The option 'target_bin' has not been set");
+                Console.ResetColor();
             }
         }
 
@@ -134,7 +206,11 @@ namespace Pwning.Posse.CommandLine
                 var exePath     = servicePath.Substring(0, servicePath.IndexOf(".exe") + 4);
                 var isDotNet    = DotNetScout.IsDotNetAssembly(exePath);
 
-                if (isDotNet) Console.ForegroundColor = ConsoleColor.Green;
+                if (isDotNet)
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    _userOptions["target_bin"] = wmiService["PathName"].ToString();
+                }
                 Console.WriteLine("{2,-30}{0,-30}{1, 0}", service.ServiceName, wmiService["PathName"], wmiService["StartName"]);
                 Console.ResetColor();
             }
@@ -152,7 +228,7 @@ namespace Pwning.Posse.CommandLine
                 {
                     var servicePath         = wmiService["PathName"].ToString();
                     var serviceDirectory    = Path.GetDirectoryName(servicePath);
-                    isSystem32              = serviceDirectory.Equals(@"C:\Windows\system32", StringComparison.OrdinalIgnoreCase);
+                    isSystem32              = serviceDirectory.ToLower().Contains(@"c:\windows\system32");
                 }
                 catch
                 {
@@ -182,17 +258,17 @@ namespace Pwning.Posse.CommandLine
                      .ForEach(svc => DisplayDotNetService(svc));
         }
 
-        static void FindDotNetVulnerabilities(string solutionPath)
+        static void FindDotNetVulnerabilities(string projectPath)
         {
-            if(string.IsNullOrEmpty(solutionPath) || !Directory.Exists(solutionPath))
+            if(string.IsNullOrEmpty(projectPath) || !Directory.Exists(projectPath))
             {
-                Console.WriteLine($"{solutionPath} is not a valid path");
+                Console.WriteLine($"{projectPath} is not a valid path");
                 return;
             }
 
-            Console.WriteLine($"Looking for possible deserialization vulnerabilities under {solutionPath}");
+            Console.WriteLine($"Looking for possible deserialization vulnerabilities under {projectPath}");
             Console.WriteLine();
-            var issuesFound = AnalyzeDotNetAssembly(solutionPath);
+            var issuesFound = AnalyzeDotNetAssembly(projectPath);
             
             if (issuesFound.Count > 0)
             {                
@@ -208,7 +284,7 @@ namespace Pwning.Posse.CommandLine
             }
             else
             {
-                Console.WriteLine($"No solution files found in {solutionPath}");
+                Console.WriteLine($"No security issues found in {projectPath}");
             }
         }
 
@@ -225,24 +301,24 @@ namespace Pwning.Posse.CommandLine
             Console.WriteLine($"Found {allAssemblies.Count()} .Net assemblies");
         }
 
-        static List<Diagnostic> AnalyzeDotNetAssembly(string solutionPath)
+        static List<Diagnostic> AnalyzeDotNetAssembly(string projectPath)
         {  
-            var solutionFiles           = DotNetScout.FindFiles(solutionPath, ".sln");
+            var projectFiles           = DotNetScout.FindFiles(projectPath, ".csproj");
             List<Diagnostic> issueList  = new List<Diagnostic>();
 
-            solutionFiles.ToList().ForEach(x =>
+            projectFiles.ToList().ForEach(x =>
             {                
-                var msWorkspace     = MSBuildWorkspace.Create();
-                var solution        = msWorkspace.OpenSolutionAsync(x).Result;
+                var msWorkspace     = MSBuildWorkspace.Create();              
+                var project         = msWorkspace.OpenProjectAsync(x).Result;
 
-                Console.WriteLine($"Inspecting solution {solution.FilePath}");
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine();
+                Console.WriteLine($"Inspecting project {project.FilePath}");
+                Console.ResetColor();
 
-                foreach (var project in solution.Projects)
-                {
-                    DiagnosticAnalyzer analyzer     = new BinaryFormatterTracker();                    
-                    var compilationWithAnalyzers    = project.GetCompilationAsync().Result.WithAnalyzers(ImmutableArray.Create(analyzer));
-                    issueList.AddRange(compilationWithAnalyzers.GetAnalyzerDiagnosticsAsync().Result);
-                }
+                DiagnosticAnalyzer analyzer     = new BinaryFormatterTracker();                    
+                var compilationWithAnalyzers    = project.GetCompilationAsync().Result.WithAnalyzers(ImmutableArray.Create(analyzer));
+                issueList.AddRange(compilationWithAnalyzers.GetAnalyzerDiagnosticsAsync().Result);                
             });
 
             return issueList;

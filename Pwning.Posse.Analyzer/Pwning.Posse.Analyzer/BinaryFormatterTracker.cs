@@ -44,8 +44,8 @@ namespace Pwning.Posse.Tracker
             if (namedTypeSymbol != null && namedTypeSymbol.Name.Equals(_methodName) && namedTypeSymbol.ReceiverType.ToString().Equals(_namespace))
             {
                 var referenceLocation           = context.Node.GetLocation();
-                var deserializationInvocations  = Utilites.FindMemberInnvocation(referenceLocation, _methodName);
-                var binder                      = Utilites.FindAssignmentExpressionSyntax(referenceLocation, "Binder");
+                var deserializationInvocations  = StaticAnalysisUtilites.FindMemberInnvocation(referenceLocation, _methodName);
+                var binder                      = StaticAnalysisUtilites.FindAssignmentExpressionSyntax(referenceLocation, "Binder");
 
                 isVulnerable = (deserializationInvocations != null && deserializationInvocations.Count() > 0);
                 isVulnerable &=  (binder == null || binder.Right.IsKind(SyntaxKind.NullLiteralExpression));                
