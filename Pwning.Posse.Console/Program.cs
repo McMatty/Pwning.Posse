@@ -50,13 +50,13 @@ namespace Pwning.Posse.CommandLine
     [Verb("find", HelpText = "Find a .Net assembly")]
     class FindOptions
     {
-        [Option('l', Required = true, HelpText = "List .Net services running as LocalSystem")]
-        public bool ListServices { get; set; }
+        [Option('s', Default = false, HelpText = "Decompile and scan assemblies ater locating")]
+        public bool Scan { get; set; }
 
-        [Option('s', Default = true, HelpText = "Performs scanning on found .Net assemblies")]
-        public bool ScanAssemblyWhenFound { get; set; }
+        [Option('r', "recursive", Default = false, HelpText = "Perform recursive search of sub folders")]
+        public bool Recursive { get; set; }
 
-        [Option(Required = false, HelpText = "Path to assembly file")]
+        [Option(Required = true, HelpText = "Folder to search for .net assembly")]
         public string Path { get; set; }
     }
 
@@ -76,11 +76,16 @@ namespace Pwning.Posse.CommandLine
         public bool Scan { get; set; }
     }
 
+    class DotNetAssemblyInfo
+    {
+        public string AssemblyPath;
+        public string ProjectPath;
+    }
 
     class Program
     {
         [DllImport("user32.dll")]
-        public static extern bool ShowWindow(System.IntPtr hWnd, int cmdShow); 
+        public static extern bool ShowWindow(System.IntPtr hWnd, int cmdShow);       
 
         static void MaximizeWindow()
         {
@@ -110,6 +115,24 @@ namespace Pwning.Posse.CommandLine
 
         private static int ProcessFind(FindOptions option)
         {
+            if (!string.IsNullOrEmpty(option.Path))
+            {
+                if (!Directory.Exists(option.Path))
+                {
+                    Console.WriteLine($"{option.Path} is not a valid path");
+                    return 1;
+                }
+
+                var dotNetAssemblyPaths = FindDotNetAssemblies(option.Path, option.Recursive);
+
+                if(option.Scan)
+                {
+                    throw new NotImplementedException();
+                }
+
+                return 0;
+            }
+
             return 1;
         }
 
@@ -210,7 +233,7 @@ namespace Pwning.Posse.CommandLine
             {               
                 var module                          = UniversalAssemblyResolver.LoadMainModule(assemblyFileName);
                 WholeProjectDecompiler decompiler   = new WholeProjectDecompiler();
-                decompileDirectory                  = FileUtilities.GetTemporaryDirectory();
+                decompileDirectory                  = FileUtilities.GetTemporaryDirectory(assemblyFileName);
 
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine();
@@ -253,7 +276,7 @@ namespace Pwning.Posse.CommandLine
                 {
                     serviceDetails = new ServiceDetails()
                     {
-                        RunningAs = wmiService["StartName"].ToString(),
+                        RunningAs   = wmiService["StartName"].ToString(),
                         ServiceName = service.ServiceName,
                         ServicePath = wmiService["PathName"].ToString()
                     };
@@ -323,17 +346,22 @@ namespace Pwning.Posse.CommandLine
             }
         }
 
-        static void FindAllDotNetAssemblies()
+        static IEnumerable<string> FindDotNetAssemblies(string rootPath, bool recursiveSearch)
         {
             //TODO: Save details to disk + add stop and restore during process
             Console.ForegroundColor = ConsoleColor.DarkGreen;
-            Console.WriteLine("Scanning for all .Net assemblies. This will take some time.");
-            Console.ResetColor();
-          
-            var rootPath        = Directory.GetDirectoryRoot(Assembly.GetExecutingAssembly().Location);
-            var allAssemblies   = DotNetScout.FindFiles(rootPath, ".exe;.dll", true).Where(x => DotNetScout.IsDotNetAssembly(x));
+            Console.WriteLine("Scanning for .Net assemblies");
+            if (recursiveSearch)
+            {
+                Console.WriteLine("This will take some time if a high root folder has been selected");
+            }
+            Console.ResetColor();          
+           
+            var allAssemblies   = DotNetScout.FindFiles(rootPath, ".exe;.dll", recursiveSearch).Where(x => DotNetScout.IsDotNetAssembly(x));            
 
             Console.WriteLine($"Found {allAssemblies.Count()} .Net assemblies");
+
+            return allAssemblies;
         }
 
         static List<Diagnostic> AnalyzeDotNetAssemblies(List<string> projectFiles)
