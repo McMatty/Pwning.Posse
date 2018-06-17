@@ -39,28 +39,32 @@ namespace Pwning.Posse.CommandLine
             }
 
             return isDotNetAssembly;
-        }        
+        }
+               
 
-        public static List<string> FindFiles(string currentFolder, string fileFilter)
+        public static List<string> FindFiles(string currentFolder, string fileFilter, bool recursiveSearch = false)
         {
             Console.WriteLine($"Searching {currentFolder}");
 
             List<string> fileList = new List<string>(Directory.GetFiles(currentFolder).Where(x => IsFileType(x, fileFilter)));
 
-            Directory.GetDirectories(currentFolder).AsParallel().ForAll(x =>
+            if (recursiveSearch)
             {
-                try
+                Directory.GetDirectories(currentFolder).AsParallel().ForAll(x =>
                 {
-                    fileList.AddRange(FindFiles(x, fileFilter));
-                }
-                catch (Exception ex)
-                {
+                    try
+                    {
+                        fileList.AddRange(FindFiles(x, fileFilter, recursiveSearch));
+                    }
+                    catch (Exception ex)
+                    {
                     //TODO: Remove console reference - provide a hook for exception gathering
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"Error yo {ex.Message}");
-                    Console.ResetColor();
-                }
-            });
+                        Console.WriteLine($"Error yo {ex.Message}");
+                        Console.ResetColor();
+                    }
+                });
+            }
 
             return fileList;
         }
