@@ -12,7 +12,7 @@ namespace Pwning.Posse.CommandLine
         public static bool IsFileType(string path, string fileFilter)
         {
             var filters = fileFilter.Split(';');
-            var isMatch = filters.All(x => path.EndsWith(x));
+            var isMatch = filters.Any(x => path.EndsWith(x));
 
             return isMatch;
         }
@@ -60,7 +60,7 @@ namespace Pwning.Posse.CommandLine
                     {
                     //TODO: Remove console reference - provide a hook for exception gathering
                     Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine($"Error yo {ex.Message}");
+                        Console.WriteLine($"Error: {ex.Message}");
                         Console.ResetColor();
                     }
                 });
