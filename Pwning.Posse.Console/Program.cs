@@ -1,87 +1,22 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using CommandLine;
+using ICSharpCode.Decompiler;
+using ICSharpCode.Decompiler.CSharp;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.MSBuild;
+using Pwning.Posse.CommandLine.Options;
 using Pwning.Posse.Tracker;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.ServiceProcess;
-using System.Management;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Reflection.Metadata;
-using ICSharpCode.Decompiler;
-using ICSharpCode.Decompiler.CSharp;
 using CL = CommandLine;
-using CommandLine;
 
 namespace Pwning.Posse.CommandLine
-{
-    class ServiceDetails
-    {        
-        public string ServiceName;
-        public string ServicePath;
-        public string RunningAs;
-    }
-
-    [Verb("scan", HelpText = "Scan source code for security vulnerability")]
-    class ScanOptions
-    {
-        [Option(Required = true, HelpText = "Path to containing folder of .csproj")]
-        public string Path { get; set; }
-
-        [Option('r', "recursive", Default = false, HelpText = "Perform recursive search of sub folders")]
-        public bool Recursive { get; set; }
-    }
-
-    [Verb("decompile", HelpText = "Decompile an assembly into source code")]
-    class DecompileOptions
-    {
-        [Option(Required = true, HelpText = "Path to .Net assembly")]
-        public string Path { get; set; }
-
-        [Option('s', Required = false, HelpText = "Performs scanning on decompiled .Net assembly")]
-        public bool ScanOutput { get; set; }
-    }
-
-    [Verb("find", HelpText = "Find a .Net assembly")]
-    class FindOptions
-    {
-        [Option('s', Default = false, HelpText = "Decompile and scan assemblies ater locating")]
-        public bool Scan { get; set; }
-
-        [Option('r', "recursive", Default = false, HelpText = "Perform recursive search of sub folders")]
-        public bool Recursive { get; set; }
-
-        [Option(Required = true, HelpText = "Folder to search for .net assembly")]
-        public string Path { get; set; }
-    }
-
-    enum InformationType
-    {        
-        Services,
-        Scanners
-    }
-
-    [Verb("list", HelpText = "List system information")]
-    class ListOptions
-    {        
-        [Option('i', "InformationType", Required = true, HelpText = "0=Services 1=Scanners")]
-        public InformationType InformationType { get; set; }       
-
-        [Option('s', Default = false, HelpText = "Scans listed .net services")]
-        public bool Scan { get; set; }
-    }
-
-    class DotNetAssemblyInfo
-    {
-        public string AssemblyPath;
-        public string ProjectPath;
-    }
-
+{  
     class Program
     {
         [DllImport("user32.dll")]
@@ -91,11 +26,7 @@ namespace Pwning.Posse.CommandLine
         {
             Process p = Process.GetCurrentProcess();
             ShowWindow(p.MainWindowHandle, 3); //SW_MAXIMIZE = 3
-        }        
-
-        static void HandleParseError(IEnumerable<Error> errs)
-        {
-        }
+        }  
 
         static void Main(string[] args)
         {
@@ -125,9 +56,9 @@ namespace Pwning.Posse.CommandLine
 
                 var dotNetAssemblyPaths = FindDotNetAssemblies(option.Path, option.Recursive);
 
-                if(option.Scan)
+                if(option.Save)
                 {
-                    throw new NotImplementedException();
+                    File.WriteAllLines("paths.txt", dotNetAssemblyPaths);                   
                 }
 
                 return 0;
@@ -147,7 +78,7 @@ namespace Pwning.Posse.CommandLine
                 }
 
                 var pathList    = new List<string>();                
-                pathList        = DotNetScout.FindFiles(option.Path, ".csproj", option.Recursive);     
+                pathList        = DotNetAssemblyLocater.FindFiles(option.Path, ".csproj", option.Recursive);     
                 
                 if(pathList.Count <= 0)
                 {
@@ -171,7 +102,7 @@ namespace Pwning.Posse.CommandLine
 
                 if(option.ScanOutput)
                 {
-                    var pathList = DotNetScout.FindFiles(outputDirectory, ".csproj");
+                    var pathList = DotNetAssemblyLocater.FindFiles(outputDirectory, ".csproj");
                     FindDotNetVulnerabilities(pathList);
                 }
 
@@ -189,7 +120,7 @@ namespace Pwning.Posse.CommandLine
                 Console.WriteLine("Displaying services running as localsystem that do not start from system32");
                 Console.ResetColor();
 
-                var serviceList = FindDotNetServices();
+                var serviceList = DotNetServiceUtilities.FindDotNetServices();
 
                 serviceList.ForEach(x =>
                 {
@@ -210,21 +141,7 @@ namespace Pwning.Posse.CommandLine
             }
 
             return 1;
-        }
-
-        /*private static void ListDecompiledAssemblies()
-        {
-            if (_dotNetAssemblyPaths.Keys.Count <= 0)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"No paths have been added");
-                Console.ResetColor();
-            }
-
-            _dotNetAssemblyPaths.Keys.AsParallel()
-                .Where(x => !string.IsNullOrEmpty(_dotNetAssemblyPaths[x]))
-                .ForAll(bin => Console.WriteLine($"Assembly {bin} is decompiled in {_dotNetAssemblyPaths[bin]}"));
-        }*/       
+        }     
 
         private static string DecompileTarget(string assemblyFileName)
         {
@@ -260,70 +177,7 @@ namespace Pwning.Posse.CommandLine
 
             return decompileDirectory;
         }
-
-        static ServiceDetails GetDotNetService(ServiceController service)
-        {
-            ServiceDetails serviceDetails = null;
-            using (var wmiService = new ManagementObject($"Win32_Service.Name='{service.ServiceName}'"))
-            {
-                wmiService.Get();
-
-                var servicePath = wmiService["PathName"].ToString();
-                var exePath     = servicePath.Substring(0, servicePath.IndexOf(".exe") + 4);
-                var isDotNet    = DotNetScout.IsDotNetAssembly(exePath);
-
-                if (isDotNet)
-                {
-                    serviceDetails = new ServiceDetails()
-                    {
-                        RunningAs   = wmiService["StartName"].ToString(),
-                        ServiceName = service.ServiceName,
-                        ServicePath = wmiService["PathName"].ToString()
-                    };
-                }
-            }
-
-            return serviceDetails;
-        }
-
-        static bool IsLocalSystemService(ServiceController service)
-        {
-            bool isFiltered = false;
-            using (var wmiService = new ManagementObject($"Win32_Service.Name='{service.ServiceName}'"))
-            {
-                wmiService.Get();
-                var isSystem32 = false;
-
-                try
-                {
-                    var servicePath         = wmiService["PathName"].ToString();
-                    var serviceDirectory    = Path.GetDirectoryName(servicePath);
-                    isSystem32              = serviceDirectory.ToLower().Contains(@"c:\windows\system32");
-                }
-                catch
-                {
-                    //TODO: Log exception - get real exception type
-                    isSystem32 = true;
-                }
-
-                isFiltered = wmiService["StartName"] != null && wmiService["StartName"].ToString().Contains("LocalSystem") && !isSystem32;
-            }
-
-            return isFiltered;
-        }
-
-        static List<ServiceDetails> FindDotNetServices()
-        {
-            var dotNetServiceList = ServiceController.GetServices()
-                     .Where(x => x.Status == ServiceControllerStatus.Running)
-                     .Where(y => IsLocalSystemService(y))
-                     .Select(svc => GetDotNetService(svc))
-                     .Where(detail => detail != null)
-                     .ToList();
-            
-            return dotNetServiceList;
-        }
-
+        
         static void FindDotNetVulnerabilities(List<string> assemblyPathList)
         {  
             var issuesFound = AnalyzeDotNetAssemblies(assemblyPathList);
@@ -357,7 +211,7 @@ namespace Pwning.Posse.CommandLine
             }
             Console.ResetColor();          
            
-            var allAssemblies   = DotNetScout.FindFiles(rootPath, ".exe;.dll", recursiveSearch).Where(x => DotNetScout.IsDotNetAssembly(x));            
+            var allAssemblies   = DotNetAssemblyLocater.FindFiles(rootPath, ".exe;.dll", recursiveSearch).Where(x => DotNetAssemblyLocater.IsDotNetAssembly(x));            
 
             Console.WriteLine($"Found {allAssemblies.Count()} .Net assemblies");
 

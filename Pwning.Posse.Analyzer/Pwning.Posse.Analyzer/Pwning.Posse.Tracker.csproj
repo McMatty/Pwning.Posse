@@ -9,7 +9,7 @@
   <PropertyGroup>
     <PackageId>Pwning.Posse.Analyzer</PackageId>
     <PackageVersion>1.0.0.0</PackageVersion>
-    <Authors>si553909</Authors>
+    <Authors></Authors>
     <PackageLicenseUrl>http://LICENSE_URL_HERE_OR_DELETE_THIS_LINE</PackageLicenseUrl>
     <PackageProjectUrl>http://PROJECT_URL_HERE_OR_DELETE_THIS_LINE</PackageProjectUrl>
     <PackageIconUrl>http://ICON_URL_HERE_OR_DELETE_THIS_LINE</PackageIconUrl>
@@ -21,6 +21,7 @@
     <PackageTags>Pwning.Posse.Analyzer, analyzers</PackageTags>
     <NoPackageAnalysis>true</NoPackageAnalysis>
     <AssemblyName>Pwning.Posse.Tracker</AssemblyName>
+    <Company />
   </PropertyGroup>
    
   <ItemGroup>

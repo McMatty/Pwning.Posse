@@ -4,10 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-
 namespace Pwning.Posse.CommandLine
 {
-    class DotNetScout
+    public class DotNetAssemblyLocater
     {
         public static bool IsFileType(string path, string fileFilter)
         {
@@ -16,6 +15,7 @@ namespace Pwning.Posse.CommandLine
 
             return isMatch;
         }
+
         public static bool IsDotNetAssembly(string path)
         {
             var isDotNetAssembly = true;
@@ -39,8 +39,7 @@ namespace Pwning.Posse.CommandLine
             }
 
             return isDotNetAssembly;
-        }
-               
+        }               
 
         public static List<string> FindFiles(string currentFolder, string fileFilter, bool recursiveSearch = false)
         {
