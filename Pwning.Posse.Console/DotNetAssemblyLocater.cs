@@ -31,7 +31,7 @@ namespace Pwning.Posse.CommandLine
             {
                 //Triggered by permissions
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"Error yo {ex.Message}");
+                Console.WriteLine($"Error {ex.Message}");
                 Console.ResetColor();
                
                 //TODO: Add verbose logging
@@ -49,7 +49,7 @@ namespace Pwning.Posse.CommandLine
 
             if (recursiveSearch)
             {
-                Directory.GetDirectories(currentFolder).AsParallel().ForAll(x =>
+                Directory.GetDirectories(currentFolder).ToList().ForEach(x =>
                 {
                     try
                     {

@@ -27,6 +27,8 @@ namespace Pwning.Posse.Tracker
         private const string Category                               = "Deserialization";
         public const string DiagnosticId                            = "Vulnerability";
 
+        public static int Test() { return 1; }
+
         private static DiagnosticDescriptor Rule = new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, Category, DiagnosticSeverity.Error, isEnabledByDefault: true, description: Description);
 
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get { return ImmutableArray.Create(Rule); } }
