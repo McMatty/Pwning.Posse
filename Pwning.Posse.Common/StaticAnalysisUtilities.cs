@@ -7,6 +7,20 @@ namespace Pwning.Posse.Common
 {
     public static class StaticAnalysisUtilites
     {
+        public static bool IsClassAndMethod(IMethodSymbol namedTypeSymbol, string @namespace, string method)
+        {
+            return namedTypeSymbol != null && namedTypeSymbol.Name.Equals(method) && namedTypeSymbol.ReceiverType.ToString().Equals(@namespace);
+        }
+
+        //Checks for an expected assignment (only useful for enums which have a set of possible values)
+        //Checks the left property is being assigned the expected propert on the right
+        public static bool IsEnumAssignedValue(ExpressionSyntax argument, string left, string right)
+        {
+            return argument.DescendantNodesAndSelf()
+                            .OfType<AssignmentExpressionSyntax>()
+                            .Any(x => x.Left.ToString().Contains(left) && x.Right.ToString().Equals(right));
+        }
+
         public static Location GetLocation(ISymbol declaredSymbol, Solution solution)
         {
             var references = SymbolFinder.FindReferencesAsync(declaredSymbol, solution).Result;

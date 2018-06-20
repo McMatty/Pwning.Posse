@@ -36,13 +36,18 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Update="Analyzers\BinaryFormatter\Resources.resx">
+    <EmbeddedResource Update="Analyzers\BinaryDeserializeTracker\Resources.resx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <Generator>ResXFileCodeGenerator</Generator>
     </EmbeddedResource>
-    <EmbeddedResource Update="Analyzers\JsonConvert\Resources.resx" Generator="ResXFileCodeGenerator" LastGenOutput="Resources.Designer.cs">
+    <EmbeddedResource Update="Analyzers\JsonDeserializeTracker\Resources.resx" Generator="ResXFileCodeGenerator" LastGenOutput="Resources.Designer.cs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Analyzers\XXETracker\Resources.resx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <Generator>ResXFileCodeGenerator</Generator>
     </EmbeddedResource>
   </ItemGroup>
 
@@ -56,15 +61,20 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Analyzers\BinaryFormatter\Resources.Designer.cs">
+    <Compile Update="Analyzers\BinaryDeserializeTracker\Resources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Update="Analyzers\JsonConvert\Resources.Designer.cs">
+    <Compile Update="Analyzers\JsonDeserializeTracker\Resources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Analyzers\XXETracker\Resources.Designer.cs">
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
     </Compile>
   </ItemGroup>
 

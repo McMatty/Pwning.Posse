@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Pwning.Posse.Tracker.Analyzers.BinaryFormatter {
+namespace Pwning.Posse.Tracker.Analyzers.XXETracker {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace Pwning.Posse.Tracker.Analyzers.BinaryFormatter {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Pwning.Posse.Tracker.Analyzers.BinaryFormatter.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Pwning.Posse.Tracker.Analyzers.XXETracker.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,7 +61,7 @@ namespace Pwning.Posse.Tracker.Analyzers.BinaryFormatter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to BinaryFormatter doesn&apos;t implement a binder.
+        ///   Looks up a localized string similar to XMLDocument has not disabled DTD.
         /// </summary>
         internal static string AnalyzerDescription {
             get {
@@ -70,7 +70,7 @@ namespace Pwning.Posse.Tracker.Analyzers.BinaryFormatter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to BinaryFormatter is possibly vulnerable to a deserialization attack.
+        ///   Looks up a localized string similar to XMLDocument is open to XXE attacks.
         /// </summary>
         internal static string AnalyzerMessageFormat {
             get {
@@ -79,7 +79,7 @@ namespace Pwning.Posse.Tracker.Analyzers.BinaryFormatter {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Deserialization vulnerability found.
+        ///   Looks up a localized string similar to XML vulnerability found.
         /// </summary>
         internal static string AnalyzerTitle {
             get {

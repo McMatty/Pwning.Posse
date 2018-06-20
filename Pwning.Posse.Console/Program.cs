@@ -23,7 +23,7 @@ namespace Pwning.Posse.CommandLine
         public static extern bool ShowWindow(System.IntPtr hWnd, int cmdShow);
 
         //TODO:IOC or reflection to load all analyzers   
-        private static List<DiagnosticAnalyzer> _analyzers = new List<DiagnosticAnalyzer>() { new BinaryFormatterTracker() , new JsonConvertTracker() };
+        private static List<DiagnosticAnalyzer> _analyzers = new List<DiagnosticAnalyzer>() { new BinaryDeserializeTracker() , new XXETracker(), new JsonDeserializeTracker() };
 
         static void MaximizeWindow()
         {

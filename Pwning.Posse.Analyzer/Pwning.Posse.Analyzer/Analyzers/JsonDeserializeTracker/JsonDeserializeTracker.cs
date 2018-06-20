@@ -3,14 +3,14 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Pwning.Posse.Common;
-using Pwning.Posse.Tracker.Analyzers.JsonConvert;
+using Pwning.Posse.Tracker.Analyzers.JsonDeserializeTracker;
 using System.Collections.Immutable;
 using System.Linq;
 
 namespace Pwning.Posse.Tracker
 {
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public class JsonConvertTracker : DiagnosticAnalyzer
+    public class JsonDeserializeTracker : DiagnosticAnalyzer
     {
         private const string _typeName              = "TypeNameHandling";
         private const string _typeNameSetting       = "TypeNameHandling.Auto";
@@ -35,16 +35,7 @@ namespace Pwning.Posse.Tracker
         public override void Initialize(AnalysisContext context)
         {
             context.RegisterSyntaxNodeAction(AnalyzeSyntax, SyntaxKind.InvocationExpression);
-        }
-
-        //Checks for an expected assignment (only useful for enums which have a set of possible values)
-        //Checks the left property is being assigned the expected propert on the right
-        private static bool IsAssignedValue(ExpressionSyntax argument, string left, string right)
-        {
-            return argument.DescendantNodesAndSelf()
-                            .OfType<AssignmentExpressionSyntax>()
-                            .Any(x => x.Left.ToString().Contains(left) && x.Right.ToString().Equals(right));
-        }
+        }        
 
         //Checks that argument being assigned is being assigned a class that implements the ISerializationBinder interface
         //TODO: Very brittle check - should be updated later
@@ -74,7 +65,7 @@ namespace Pwning.Posse.Tracker
 
             if (settingsArgument != null && settingsArgument.IsKind(SyntaxKind.ObjectCreationExpression))
             {
-                var hasAutoTypeSetting  = IsAssignedValue(settingsArgument, _typeName, _typeNameSetting);
+                var hasAutoTypeSetting  = StaticAnalysisUtilites.IsEnumAssignedValue(settingsArgument, _typeName, _typeNameSetting);
                 var hasSerialBinder     = IsAssignedSerialBinder(settingsArgument, context);
                 isVulnerable            = hasAutoTypeSetting && !hasSerialBinder;
             }
@@ -98,7 +89,7 @@ namespace Pwning.Posse.Tracker
                     var location            = settingsArgument.GetLocation();
                     var typeHandlerSetting  = StaticAnalysisUtilites.FindAssignmentExpressionSyntax(location, _typeName);
                     var binderSetting       = StaticAnalysisUtilites.FindAssignmentExpressionSyntax(location, _binderSetting);
-                    var hasAutoTypeSetting  = IsAssignedValue(typeHandlerSetting, _typeName, _typeNameSetting);
+                    var hasAutoTypeSetting  = StaticAnalysisUtilites.IsEnumAssignedValue(typeHandlerSetting, _typeName, _typeNameSetting);
                     var hasSerialBinder     = IsAssignedSerialBinder(binderSetting, context);
                     isVulnerable            = hasAutoTypeSetting && !hasSerialBinder;
                 }
@@ -113,7 +104,7 @@ namespace Pwning.Posse.Tracker
             var namedTypeSymbol = symbol.Symbol as IMethodSymbol;
 
             // Find just those named type symbols with names containing lowercase letters.
-            if (namedTypeSymbol != null && namedTypeSymbol.Name.Equals(_methodName) && namedTypeSymbol.ReceiverType.ToString().Equals(_namespace))
+            if (StaticAnalysisUtilites.IsClassAndMethod(namedTypeSymbol, _namespace, _methodName))
             {
                 var isVulnerable            = false;
                 var invocationExpression    = context.Node as InvocationExpressionSyntax;
