@@ -7,9 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pwning.Posse.Common", "Pwni
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pwning.Posse.CommandLine", "Pwning.Posse.Console\Pwning.Posse.CommandLine.csproj", "{4DDBEA4C-8A9E-44EF-A5FF-CA6BCA8754F7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pwning.Posse.Tracker", "Pwning.Posse.Analyzer\Pwning.Posse.Analyzer\Pwning.Posse.Tracker.csproj", "{49A0DD1D-5CEC-4FAB-A539-1100824859BC}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unit test", "Unit test", "{23C12D1B-F13D-4643-884F-2B905081645D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pwning.Posse.Tracker", "Pwning.Posse.Analyzer\Pwning.Posse.Analyzer\Pwning.Posse.Tracker.csproj", "{49A0DD1D-5CEC-4FAB-A539-1100824859BC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -20,7 +20,10 @@ namespace Pwning.Posse.CommandLine
     class Program
     {
         [DllImport("user32.dll")]
-        public static extern bool ShowWindow(System.IntPtr hWnd, int cmdShow);       
+        public static extern bool ShowWindow(System.IntPtr hWnd, int cmdShow);
+
+        //TODO:IOC or reflection to load all analyzers   
+        private static List<DiagnosticAnalyzer> _analyzers = new List<DiagnosticAnalyzer>() { new BinaryFormatterTracker() , new JsonConvertTracker() };
 
         static void MaximizeWindow()
         {
@@ -57,8 +60,7 @@ namespace Pwning.Posse.CommandLine
                 switch (option.FileType)
                 {                   
                     case FileType.Assemblies:
-                        {              
-                            //TODO: try catch in loop
+                        {           
                             FindDotNetAssemblies(targetPath, option.Recursive)
                                                     .ToList()
                                                     .ForEach(x => pathList.Add(DecompileTarget(x)));
@@ -68,9 +70,8 @@ namespace Pwning.Posse.CommandLine
                     case FileType.Nuget:
                         {
                             searchString = ".nupkg";
-                            DotNetAssemblyLocater.FindFiles(targetPath, searchString, option.Recursive)
-                                .AsParallel()
-                                .ForAll(x => FileUtilities.ExtractNugetAssemblies(x)
+                            DotNetAssemblyLocater.FindFiles(targetPath, searchString, option.Recursive)                                
+                                .ForEach(x => FileUtilities.ExtractNugetAssemblies(x)
                                                           .ForEach(dll => pathList.Add(DecompileTarget(dll))
                                                           ));
                             break;
@@ -95,9 +96,7 @@ namespace Pwning.Posse.CommandLine
                 pathList.ForEach(x => {
                                             var csprojList = DotNetAssemblyLocater.FindFiles(x, ".csproj", option.Recursive);
                                             FindDotNetVulnerabilities(csprojList);
-                                      });
-
-            
+                                      });            
 
                 return 0;
             }
@@ -159,10 +158,25 @@ namespace Pwning.Posse.CommandLine
             string decompileDirectory = string.Empty;
             if (File.Exists(assemblyFileName))
             {               
-                var module                          = UniversalAssemblyResolver.LoadMainModule(assemblyFileName);
-                WholeProjectDecompiler decompiler = new WholeProjectDecompiler();
-                decompiler.Settings.ThrowOnAssemblyResolveErrors = false;
-                decompileDirectory                  = FileUtilities.GetDecompileDirectory(assemblyFileName);
+                var module                                          = UniversalAssemblyResolver.LoadMainModule(assemblyFileName, false);
+                WholeProjectDecompiler decompiler                   = new WholeProjectDecompiler();
+                decompiler.Settings.ThrowOnAssemblyResolveErrors    = false;
+                decompileDirectory                                  = FileUtilities.GetDecompileDirectory(assemblyFileName, false);
+
+                if(Directory.Exists(decompileDirectory) && Directory.GetFiles(decompileDirectory).Count() > 0)
+                {
+                    //TODO: Add a override option + better faster way to check
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine();
+                    Console.WriteLine($"Already decompiled located here {decompileDirectory}");
+                    Console.ResetColor();
+
+                    return decompileDirectory;
+                }
+                else
+                {
+                    Directory.CreateDirectory(decompileDirectory);
+                }
 
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine();
@@ -233,25 +247,24 @@ namespace Pwning.Posse.CommandLine
         static List<Diagnostic> AnalyzeDotNetAssemblies(List<string> projectFiles)
         {             
             List<Diagnostic> issueList  = new List<Diagnostic>();
+            var msWorkspace             = MSBuildWorkspace.Create();
 
             projectFiles.ToList().ForEach(x =>
             {                
-                var msWorkspace     = MSBuildWorkspace.Create();              
                 var project         = msWorkspace.OpenProjectAsync(x).Result;
 
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine();
                 Console.WriteLine($"Inspecting project {project.FilePath}");
                 Console.ResetColor();
-
-                //TODO:IOC or reflection to load all analyzers
-                DiagnosticAnalyzer binaryAnalyzer   = new BinaryFormatterTracker();
-                DiagnosticAnalyzer jsonAnalyzer     = new JsonConvertTracker();
-                var compilationWithAnalyzers        = project.GetCompilationAsync().Result.WithAnalyzers(ImmutableArray.Create(jsonAnalyzer, binaryAnalyzer));
+                             
+                var compilationWithAnalyzers        = project.GetCompilationAsync().Result.WithAnalyzers(_analyzers.ToImmutableArray());
                 issueList.AddRange(compilationWithAnalyzers.GetAnalyzerDiagnosticsAsync().Result);                
             });
 
             return issueList;
         }
+
+        
     }
 }

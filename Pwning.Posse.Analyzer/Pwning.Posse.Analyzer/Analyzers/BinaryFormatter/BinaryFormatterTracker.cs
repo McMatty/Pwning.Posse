@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Pwning.Posse.Common;
+using Pwning.Posse.Tracker.Analyzers.BinaryFormatter;
 using System.Collections.Immutable;
 using System.Linq;
 

@@ -23,6 +23,12 @@
     <AssemblyName>Pwning.Posse.Tracker</AssemblyName>
     <Company />
   </PropertyGroup>
+  
+  <ItemGroup>
+    <Compile Remove="Resources\**" />
+    <EmbeddedResource Remove="Resources\**" />
+    <None Remove="Resources\**" />
+  </ItemGroup>
    
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="2.8.2" PrivateAssets="all" />
@@ -30,8 +36,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Resources.Designer.cs" DesignTime="True" AutoGen="True" DependentUpon="Resources.resx" />
-    <EmbeddedResource Update="Resources.resx" Generator="ResXFileCodeGenerator" LastGenOutput="Resources.Designer.cs">
+    <EmbeddedResource Update="Analyzers\BinaryFormatter\Resources.resx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <Generator>ResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Analyzers\JsonConvert\Resources.resx" Generator="ResXFileCodeGenerator" LastGenOutput="Resources.Designer.cs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
   </ItemGroup>
@@ -43,6 +53,19 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Pwning.Posse.Common\Pwning.Posse.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Analyzers\BinaryFormatter\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Analyzers\JsonConvert\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
   </ItemGroup>
 
 </Project>

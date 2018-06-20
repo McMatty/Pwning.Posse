@@ -43,7 +43,7 @@ namespace Pwning.Posse.CommandLine
 
         public static List<string> FindFiles(string currentFolder, string fileFilter, bool recursiveSearch = false)
         {
-            Console.WriteLine($"Searching {currentFolder}");
+            Console.WriteLine($"Searching {currentFolder} for files ending with '{fileFilter}'");
 
             List<string> fileList = new List<string>(Directory.GetFiles(currentFolder).Where(x => IsFileType(x, fileFilter)));
 
