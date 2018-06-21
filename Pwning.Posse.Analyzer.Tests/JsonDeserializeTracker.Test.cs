@@ -86,8 +86,8 @@ namespace ConsoleApplication1
 }";
             var expected = new DiagnosticResult
             {
-                Id = "SonarqubeExampleRule",
-                Message = String.Format("Type name '{0}' contains lowercase letters", "TypeName"),
+                Id = "Vulnerability",
+                Message = String.Format("JsonConvert is possibly vulnerable to a deserialization attack"),
                 Severity = DiagnosticSeverity.Error,
                 Locations =
                     new[] {
@@ -129,8 +129,8 @@ namespace ConsoleApplication1
 }";
             var expected = new DiagnosticResult
             {
-                Id = "SonarqubeExampleRule",
-                Message = String.Format("Type name '{0}' contains lowercase letters", "TypeName"),
+                Id = "Vulnerability",
+                Message = String.Format("JsonConvert is possibly vulnerable to a deserialization attack"),
                 Severity = DiagnosticSeverity.Error,
                 Locations =
                     new[] {
@@ -343,8 +343,8 @@ namespace ConsoleApplication1
 }";
             var expected = new DiagnosticResult
             {
-                Id = "SonarqubeExampleRule",
-                Message = String.Format("Type name '{0}' contains lowercase letters", "TypeName"),
+                Id = "Vulnerability",
+                Message = String.Format("JsonConvert  is possibly vulnerable to a deserialization attack"),
                 Severity = DiagnosticSeverity.Error,
                 Locations =
                    new[] {

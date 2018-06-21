@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Xml;
 
 namespace Pwning.Posse.Analyzer.Tests.TestHelper
 {
@@ -22,6 +23,8 @@ namespace Pwning.Posse.Analyzer.Tests.TestHelper
         private static readonly MetadataReference CodeAnalysisReference     = MetadataReference.CreateFromFile(typeof(Compilation).Assembly.Location);
         private static readonly MetadataReference NewtonSoftReference       = MetadataReference.CreateFromFile(typeof(JsonConvert).Assembly.Location);
         private static readonly MetadataReference NetStandardReference      = MetadataReference.CreateFromFile(typeof(Object).Assembly.Location);
+        //TODO seperate into another class or unit test
+        private static readonly MetadataReference XmlReference              = MetadataReference.CreateFromFile(typeof(XmlDocument).Assembly.Location);
 
         internal static string DefaultFilePathPrefix = "Test";
         internal static string CSharpDefaultFileExt = "cs";
@@ -158,7 +161,8 @@ namespace Pwning.Posse.Analyzer.Tests.TestHelper
                 .AddMetadataReference(projectId, CSharpSymbolsReference)
                 .AddMetadataReference(projectId, NetStandardReference)
                 .AddMetadataReference(projectId, NewtonSoftReference)
-                .AddMetadataReference(projectId, CodeAnalysisReference);
+                .AddMetadataReference(projectId, XmlReference)
+                .AddMetadataReference(projectId, CodeAnalysisReference);            
 
             int count = 0;
             foreach (var source in sources)

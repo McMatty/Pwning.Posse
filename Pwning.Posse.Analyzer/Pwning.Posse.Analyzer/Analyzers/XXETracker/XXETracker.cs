@@ -12,7 +12,7 @@ namespace Pwning.Posse.Tracker
     public class XXETracker : DiagnosticAnalyzer
     {
         private static string _namespace        = "System.Xml.XmlDocument";
-        private static string _methodName       = "Load";
+        private static string _methodName       = "LoadXml";
         private static string _dtdProcessing    = "DtdProcessing";
         private static string _dtdProhibit      = "DtdProcessing.Prohibit";
 
@@ -47,7 +47,7 @@ namespace Pwning.Posse.Tracker
                 var deserializationInvocations  = StaticAnalysisUtilites.FindMemberInnvocation(referenceLocation, _dtdProcessing);
                 var dtdProcessing               = StaticAnalysisUtilites.FindAssignmentExpressionSyntax(referenceLocation, _dtdProcessing);
 
-                isVulnerable = (deserializationInvocations != null || deserializationInvocations.Count() <= 0);
+                isVulnerable = (deserializationInvocations == null || deserializationInvocations.Count() <= 0);
                 isVulnerable &= (dtdProcessing == null || dtdProcessing.Right.IsKind(SyntaxKind.NullLiteralExpression));
             }
 
