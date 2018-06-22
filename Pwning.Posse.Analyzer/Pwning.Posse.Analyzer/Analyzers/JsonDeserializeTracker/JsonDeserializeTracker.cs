@@ -13,7 +13,7 @@ namespace Pwning.Posse.Tracker
     public class JsonDeserializeTracker : DiagnosticAnalyzer
     {
         private const string _typeName              = "TypeNameHandling";
-        private const string _typeNameSetting       = "TypeNameHandling.Auto";
+        private static readonly string[] _typeNameSettings =  { "TypeNameHandling.Auto",  "TypeNameHandling.Object", "TypeNameHandling.All"};       
         private const string _binderSetting         = "SerializationBinder";
         private const string _serializerSettings    = "JsonSerializerSettings";
         private const string _methodName            = "DeserializeObject";
@@ -65,7 +65,7 @@ namespace Pwning.Posse.Tracker
 
             if (settingsArgument != null && settingsArgument.IsKind(SyntaxKind.ObjectCreationExpression))
             {
-                var hasAutoTypeSetting  = StaticAnalysisUtilites.IsEnumAssignedValue(settingsArgument, _typeName, _typeNameSetting);
+                var hasAutoTypeSetting  = StaticAnalysisUtilites.IsEnumAssignedValue(settingsArgument, _typeName, _typeNameSettings);
                 var hasSerialBinder     = IsAssignedSerialBinder(settingsArgument, context);
                 isVulnerable            = hasAutoTypeSetting && !hasSerialBinder;
             }
@@ -89,7 +89,7 @@ namespace Pwning.Posse.Tracker
                     var location            = settingsArgument.GetLocation();
                     var typeHandlerSetting  = StaticAnalysisUtilites.FindAssignmentExpressionSyntax(location, _typeName);
                     var binderSetting       = StaticAnalysisUtilites.FindAssignmentExpressionSyntax(location, _binderSetting);
-                    var hasAutoTypeSetting  = StaticAnalysisUtilites.IsEnumAssignedValue(typeHandlerSetting, _typeName, _typeNameSetting);
+                    var hasAutoTypeSetting  = StaticAnalysisUtilites.IsEnumAssignedValue(typeHandlerSetting, _typeName, _typeNameSettings);
                     var hasSerialBinder     = IsAssignedSerialBinder(binderSetting, context);
                     isVulnerable            = hasAutoTypeSetting && !hasSerialBinder;
                 }

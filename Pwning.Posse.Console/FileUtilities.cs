@@ -53,7 +53,7 @@ namespace Pwning.Posse.CommandLine
         public static string GetSubDirectory(string subDirectory, string fileName, bool createDirectory)
         {            
             //The hashcode is because the path may be different and have a different version
-            var hashFileName        = string.Format("{0}+{1}", GetFileHash(fileName), Path.GetFileName(fileName));
+            var hashFileName        = string.Format("{0}+{1}", Path.GetFileName(fileName), GetFileHash(fileName));
             string tempDirectory    = Path.Combine(AssemblyDirectory, subDirectory, hashFileName);
 
             if(createDirectory) Directory.CreateDirectory(tempDirectory);
