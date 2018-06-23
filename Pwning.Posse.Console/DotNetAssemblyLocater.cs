@@ -42,9 +42,7 @@ namespace Pwning.Posse.CommandLine
         }               
 
         public static List<string> FindFiles(string currentFolder, string fileFilter, bool recursiveSearch = false)
-        {
-            Console.WriteLine($"Searching {currentFolder} for files ending with '{fileFilter}'");
-
+        {  
             List<string> fileList = new List<string>(Directory.GetFiles(currentFolder).Where(x => IsFileType(x, fileFilter)));
 
             if (recursiveSearch)
@@ -58,7 +56,7 @@ namespace Pwning.Posse.CommandLine
                     catch (Exception ex)
                     {
                     //TODO: Remove console reference - provide a hook for exception gathering
-                    Console.ForegroundColor = ConsoleColor.Red;
+                        Console.ForegroundColor = ConsoleColor.Red;
                         Console.WriteLine($"Error: {ex.Message}");
                         Console.ResetColor();
                     }
