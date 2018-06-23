@@ -157,13 +157,10 @@ namespace Pwning.Posse.CommandLine
         {
             string decompileDirectory = string.Empty;
             if (File.Exists(assemblyFileName))
-            {               
-                var module                                          = UniversalAssemblyResolver.LoadMainModule(assemblyFileName, false);
-                WholeProjectDecompiler decompiler                   = new WholeProjectDecompiler();
-                decompiler.Settings.ThrowOnAssemblyResolveErrors    = false;
-                decompileDirectory                                  = FileUtilities.GetDecompileDirectory(assemblyFileName, false);
+            {
+                decompileDirectory = FileUtilities.GetDecompileDirectory(assemblyFileName, false);
 
-                if(Directory.Exists(decompileDirectory) && Directory.GetFiles(decompileDirectory).Count() > 0)
+                if (Directory.Exists(decompileDirectory) && Directory.GetFiles(decompileDirectory).Count() > 0)
                 {
                     //TODO: Add a override option + better faster way to check
                     Console.ForegroundColor = ConsoleColor.Green;
@@ -178,21 +175,27 @@ namespace Pwning.Posse.CommandLine
                     Directory.CreateDirectory(decompileDirectory);
                 }
 
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine();
-                Console.WriteLine($"Decompiling {assemblyFileName} to {decompileDirectory}");
-                Console.ResetColor();
+                using (var module = UniversalAssemblyResolver.LoadMainModule(assemblyFileName, false))
+                {
+                    WholeProjectDecompiler decompiler = new WholeProjectDecompiler();
+                    decompiler.Settings.ThrowOnAssemblyResolveErrors = false;                    
 
-                try
-                {
-                    decompiler.DecompileProject(module, decompileDirectory);                   
-                }
-                catch(Exception ex)
-                {
-                    var message             = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"Decompiling {assemblyFileName} threw an exception with the message {message}");
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine();
+                    Console.WriteLine($"Decompiling {assemblyFileName} to {decompileDirectory}");
                     Console.ResetColor();
+
+                    try
+                    {
+                        decompiler.DecompileProject(module, decompileDirectory);
+                    }
+                    catch (Exception ex)
+                    {
+                        var message = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine($"Decompiling {assemblyFileName} threw an exception with the message {message}");
+                        Console.ResetColor();
+                    }
                 }
             }
             else
