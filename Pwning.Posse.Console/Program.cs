@@ -60,7 +60,8 @@ namespace Pwning.Posse.CommandLine
                 switch (option.FileType)
                 {                   
                     case FileType.Assemblies:
-                        {           
+                        {
+                            Console.WriteLine($"Searching {targetPath} for files ending with '.dll;.exe'");
                             FindDotNetAssemblies(targetPath, option.Recursive)
                                                     .ToList()
                                                     .ForEach(x => pathList.Add(DecompileTarget(x)));
@@ -70,6 +71,7 @@ namespace Pwning.Posse.CommandLine
                     case FileType.Nuget:
                         {
                             searchString = ".nupkg";
+                            Console.WriteLine($"Searching {targetPath} for files ending with '{searchString}'");
                             DotNetAssemblyLocater.FindFiles(targetPath, searchString, option.Recursive)                                
                                 .ForEach(x => FileUtilities.ExtractNugetAssemblies(x)
                                                           .ForEach(dll => pathList.Add(DecompileTarget(dll))
@@ -78,6 +80,7 @@ namespace Pwning.Posse.CommandLine
                         };
                     case FileType.Project:
                         {
+                            Console.WriteLine($"Searching {targetPath} for files ending with '.csproj'");
                             pathList.Add(targetPath);
                             break;
                         };
@@ -92,11 +95,8 @@ namespace Pwning.Posse.CommandLine
 
                     return 1;
                 }
-              
-                pathList.ForEach(x => {
-                                            var csprojList = DotNetAssemblyLocater.FindFiles(x, ".csproj", option.Recursive);
-                                            FindDotNetVulnerabilities(csprojList);
-                                      });            
+
+                FindDotNetVulnerabilities(pathList, option.Recursive);
 
                 return 0;
             }
@@ -113,7 +113,7 @@ namespace Pwning.Posse.CommandLine
                 if(option.ScanOutput)
                 {
                     var pathList = DotNetAssemblyLocater.FindFiles(outputDirectory, ".csproj");
-                    FindDotNetVulnerabilities(pathList);
+                    FindDotNetVulnerabilities(pathList, false);
                 }
 
                 return 0;
@@ -189,8 +189,9 @@ namespace Pwning.Posse.CommandLine
                 }
                 catch(Exception ex)
                 {
+                    var message             = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"Decompiling {assemblyFileName} threw an exception with the message {ex.Message}");
+                    Console.WriteLine($"Decompiling {assemblyFileName} threw an exception with the message {message}");
                     Console.ResetColor();
                 }
             }
@@ -204,26 +205,16 @@ namespace Pwning.Posse.CommandLine
             return decompileDirectory;
         }
         
-        static void FindDotNetVulnerabilities(List<string> assemblyPathList)
-        {  
-            var issuesFound = AnalyzeDotNetAssemblies(assemblyPathList);
-            
-            if (issuesFound.Count > 0)
-            {                
-                Console.ForegroundColor = ConsoleColor.Red;             
-
-                issuesFound                    
-                    .AsParallel()
-                    .ForAll(issue =>
-                    {
-                        Console.WriteLine("{0} {1})", issue.GetMessage(), issue.Location.GetMappedLineSpan());
-                    });
-                Console.ResetColor();
-            }
-            else
-            {
-                assemblyPathList.ForEach(x => Console.WriteLine($"No security issues found in {x}"));
-            }
+        static void FindDotNetVulnerabilities(List<string> pathList, bool isRecursive)
+        {
+            pathList.SelectMany(x => AnalyzeDotNetAssemblies(DotNetAssemblyLocater.FindFiles(x, ".csproj", isRecursive)))
+                   .AsParallel()
+                   .ForAll(issue =>
+                   {
+                       Console.ForegroundColor = ConsoleColor.Red;
+                       Console.WriteLine("{0} {1})", issue.GetMessage(), issue.Location.GetMappedLineSpan());
+                       Console.ResetColor();
+                   });
         }
 
         static IEnumerable<string> FindDotNetAssemblies(string rootPath, bool recursiveSearch)
@@ -263,8 +254,6 @@ namespace Pwning.Posse.CommandLine
             });
 
             return issueList;
-        }
-
-        
+        }        
     }
 }
