@@ -398,7 +398,71 @@ namespace ConsoleApplication1
                         }
             };
 
-            VerifyCSharpDiagnostic(test, expected);
+            VerifyCSharpDiagnostic(test);
+        }
+
+        [TestMethod]
+        public void VulnerableAutoAssignment_PropertyAssignmentInClass_NoErrorDetected()
+        {
+            var test = @"
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Diagnostics;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+
+namespace ConsoleApplication1
+{
+    public class KnownTypesBinder : ISerializationBinder
+    {
+        public IList<Type> KnownTypes { get; set; }
+
+        public Type BindToType(string assemblyName, string typeName)
+        {
+            return KnownTypes.SingleOrDefault(t => t.Name == typeName);
+        }
+
+        public void BindToName(Type serializedType, out string assemblyName, out string typeName)
+        {
+            assemblyName = null;
+            typeName = serializedType.Name;
+        }
+    }
+
+    public class Car
+    {
+        public string Maker { get; set; }
+        public string Model { get; set; }
+    }
+
+    class TypeName
+    {  
+        private readonly KnownTypesBinder knownTypesBinder = new KnownTypesBinder()
+        {
+                    KnownTypes = new List<Type> { typeof(Car) }
+        };
+
+        private readonly JsonSerializerSettings _serializerSettings = new JsonSerializerSettings()
+        {
+            TypeNameHandling = TypeNameHandling.Object,
+            SerializationBinder = knownTypesBinder
+        };
+
+        static void  Main(string[] args)
+        {
+            GetDeserializedObject(""payload"");
+        }
+
+        public static void GetDeserializedObject(string payload)
+        {                
+                var obj = JsonConvert.DeserializeObject<Object>(payload, _serializerSettings); 
+        }
+    }
+}";         
+             VerifyCSharpDiagnostic(test);
         }
 
         protected override DiagnosticAnalyzer GetCSharpDiagnosticAnalyzer()

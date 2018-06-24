@@ -47,10 +47,11 @@ namespace Pwning.Posse.Tracker
                             .OfType<AssignmentExpressionSyntax>()
                             .Any(x =>
                             {
-                                var symbol = context.SemanticModel.GetSymbolInfo(x.Right).Symbol as ILocalSymbol;
+                                var symbol      = context.SemanticModel.GetSymbolInfo(x.Right).Symbol;
                                 if (symbol == null) return false;
 
-                                return symbol.Type.AllInterfaces.Any(@interface => @interface.OriginalDefinition.ToDisplayString().Equals(_binderInterface));
+                                var symbolType = StaticAnalysisUtilites.GetTypeFromDeclaration(symbol);
+                                return symbolType.AllInterfaces.Any(@interface => @interface.OriginalDefinition.ToDisplayString().Equals(_binderInterface));
                             });
         }
 
@@ -93,7 +94,7 @@ namespace Pwning.Posse.Tracker
                     var declearationNode    = StaticAnalysisUtilites.FindDeclearationNode(location);
                     var hasAutoTypeSetting  = StaticAnalysisUtilites.IsAssignedValue(declearationNode, _typeName, _typeNameSettings);
                     var hasSerialBinder     = IsAssignedSerialBinder(declearationNode, context);
-                    isVulnerable = hasAutoTypeSetting && !hasSerialBinder;
+                    isVulnerable            = hasAutoTypeSetting && !hasSerialBinder;
                 }
             }
 
@@ -144,6 +145,7 @@ namespace Pwning.Posse.Tracker
                     var settingsArgument    = invocationExpression.ArgumentList.Arguments[1].Expression;
                     var declaration         = context.SemanticModel.GetSymbolInfo(settingsArgument).Symbol;
 
+                    //TODO: Setup a state object here for field types
                     switch (declaration.Kind)
                     {
                         case SymbolKind.Field:
