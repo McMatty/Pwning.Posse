@@ -1,7 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.FindSymbols;
-using System;
 using System.Linq;
 
 namespace Pwning.Posse.Common
@@ -15,7 +15,7 @@ namespace Pwning.Posse.Common
 
         //Checks for an expected assignment (only useful for enums which have a set of possible values)
         //Checks the left property is being assigned the expected propert on the right
-        public static bool IsEnumAssignedValue(ExpressionSyntax argument, string left, string right)
+        public static bool IsAssignedValue(SyntaxNode argument, string left, string right)
         {
             return argument.DescendantNodesAndSelf()
                             .OfType<AssignmentExpressionSyntax>()
@@ -24,7 +24,7 @@ namespace Pwning.Posse.Common
 
         //Checks for an expected assignment (only useful for enums which have a set of possible values)
         //Checks the left property is being assigned the expected propert on the right
-        public static bool IsEnumAssignedValue(ExpressionSyntax argument, string left, string[] right)
+        public static bool IsAssignedValue(SyntaxNode argument, string left, string[] right)
         {
             return argument.DescendantNodesAndSelf()
                             .OfType<AssignmentExpressionSyntax>()
@@ -75,6 +75,12 @@ namespace Pwning.Posse.Common
             return memberAccess;
         }
 
+        public static SyntaxNode FindDeclearationNode(Location referenceLocation)
+        {
+            return referenceLocation.SourceTree.GetRoot().FindNode(referenceLocation.SourceSpan);
+        }
+
+        //TODO: Remove this as ThisExpressionSyntax declaration check gives us the location
         //This is for a local declaration value - so we only go up to the first blockSyntax as after that we will be out of scope
         //Step 2 Find MemberAccessExpression as this is working against the delcaration found
         //Step 3 Go down the tree to the identifer of the AccessExpression as validation that the property being looked for matches
@@ -100,13 +106,10 @@ namespace Pwning.Posse.Common
         {
             var referenceNode = referenceLocation.SourceTree.GetRoot().FindNode(referenceLocation.SourceSpan);
             var memberAccess = referenceNode.Ancestors().OfType<ClassDeclarationSyntax>()
-                                                        .FirstOrDefault()?.DescendantNodes().OfType<FieldDeclarationSyntax>()
-                                                        .FirstOrDefault()?.DescendantNodes().OfType<MemberAccessExpressionSyntax>()
-                                                        .Where(x => x.Name.ToString().Equals(memberName))
-                                                        .Select(y => y.Ancestors().OfType<AssignmentExpressionSyntax>()
-                                                        .FirstOrDefault()).FirstOrDefault();
+                                                        .FirstOrDefault()?.DescendantNodes().OfType<FieldDeclarationSyntax>().First();
 
-            return memberAccess;
+
+            return null;// memberAccess;
         }        
 
         public static LocalDeclarationStatementSyntax FindLocalIdentifierDeclaration(IdentifierNameSyntax identifierName)

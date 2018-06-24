@@ -373,7 +373,7 @@ namespace ConsoleApplication1
     {  
         private readonly JsonSerializerSettings _serializerSettings = new JsonSerializerSettings()
         {
-            TypeNameHandling = TypeNameHandling.Objects
+            TypeNameHandling = TypeNameHandling.Object
         };
 
         static void  Main(string[] args)
@@ -394,7 +394,7 @@ namespace ConsoleApplication1
                 Severity = DiagnosticSeverity.Error,
                 Locations =
                     new[] {
-                            new DiagnosticResultLocation("Test0.cs", 23, 27)
+                            new DiagnosticResultLocation("Test0.cs", 26, 27)
                         }
             };
 

@@ -39,7 +39,7 @@ namespace Pwning.Posse.Tracker
 
         //Checks that argument being assigned is being assigned a class that implements the ISerializationBinder interface
         //TODO: Very brittle check - should be updated later
-        private static bool IsAssignedSerialBinder(ExpressionSyntax argument, SyntaxNodeAnalysisContext context)
+        private static bool IsAssignedSerialBinder(SyntaxNode argument, SyntaxNodeAnalysisContext context)
         {
             if (argument == null) return false;
 
@@ -65,7 +65,7 @@ namespace Pwning.Posse.Tracker
 
             if (settingsArgument != null && settingsArgument.IsKind(SyntaxKind.ObjectCreationExpression))
             {
-                var hasAutoTypeSetting  = StaticAnalysisUtilites.IsEnumAssignedValue(settingsArgument, _typeName, _typeNameSettings);
+                var hasAutoTypeSetting  = StaticAnalysisUtilites.IsAssignedValue(settingsArgument, _typeName, _typeNameSettings);
                 var hasSerialBinder     = IsAssignedSerialBinder(settingsArgument, context);
                 isVulnerable            = hasAutoTypeSetting && !hasSerialBinder;
             }
@@ -89,11 +89,10 @@ namespace Pwning.Posse.Tracker
 
                 if (variableType.Name.Equals(_serializerSettings))
                 {
-                    var location            = settingsArgument.GetLocation();
-                    var typeHandlerSetting  = StaticAnalysisUtilites.FindGlobalAssignmentExpressionSyntax(location, _serializerSettings);
-                    var binderSetting       = StaticAnalysisUtilites.FindGlobalAssignmentExpressionSyntax(location, _binderSetting);
-                    var hasAutoTypeSetting  = StaticAnalysisUtilites.IsEnumAssignedValue(typeHandlerSetting, _typeName, _typeNameSettings);
-                    var hasSerialBinder     = IsAssignedSerialBinder(binderSetting, context);
+                    var location            = (declaration as IFieldSymbol).Locations.First();
+                    var declearationNode    = StaticAnalysisUtilites.FindDeclearationNode(location);
+                    var hasAutoTypeSetting  = StaticAnalysisUtilites.IsAssignedValue(declearationNode, _typeName, _typeNameSettings);
+                    var hasSerialBinder     = IsAssignedSerialBinder(declearationNode, context);
                     isVulnerable = hasAutoTypeSetting && !hasSerialBinder;
                 }
             }
@@ -119,7 +118,7 @@ namespace Pwning.Posse.Tracker
                     var location            = settingsArgument.GetLocation();
                     var typeHandlerSetting  = StaticAnalysisUtilites.FindLocalAssignmentExpressionSyntax(location, _typeName);
                     var binderSetting       = StaticAnalysisUtilites.FindLocalAssignmentExpressionSyntax(location, _binderSetting);
-                    var hasAutoTypeSetting  = StaticAnalysisUtilites.IsEnumAssignedValue(typeHandlerSetting, _typeName, _typeNameSettings);
+                    var hasAutoTypeSetting  = StaticAnalysisUtilites.IsAssignedValue(typeHandlerSetting, _typeName, _typeNameSettings);
                     var hasSerialBinder     = IsAssignedSerialBinder(binderSetting, context);
                     isVulnerable            = hasAutoTypeSetting && !hasSerialBinder;
                 }
