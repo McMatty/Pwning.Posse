@@ -86,8 +86,8 @@ namespace ConsoleApplication1
 }";
             var expected = new DiagnosticResult
             {
-                Id = "SonarqubeExampleRule",
-                Message = String.Format("Type name '{0}' contains lowercase letters", "TypeName"),
+                Id = "Vulnerability",
+                Message = String.Format("JsonConvert is possibly vulnerable to a deserialization attack"),
                 Severity = DiagnosticSeverity.Error,
                 Locations =
                     new[] {
@@ -129,8 +129,8 @@ namespace ConsoleApplication1
 }";
             var expected = new DiagnosticResult
             {
-                Id = "SonarqubeExampleRule",
-                Message = String.Format("Type name '{0}' contains lowercase letters", "TypeName"),
+                Id = "Vulnerability",
+                Message = String.Format("JsonConvert is possibly vulnerable to a deserialization attack"),
                 Severity = DiagnosticSeverity.Error,
                 Locations =
                     new[] {
@@ -343,13 +343,59 @@ namespace ConsoleApplication1
 }";
             var expected = new DiagnosticResult
             {
-                Id = "SonarqubeExampleRule",
-                Message = String.Format("Type name '{0}' contains lowercase letters", "TypeName"),
+                Id = "Vulnerability",
+                Message = String.Format("JsonConvert  is possibly vulnerable to a deserialization attack"),
                 Severity = DiagnosticSeverity.Error,
                 Locations =
                    new[] {
                             new DiagnosticResultLocation("Test0.cs", 55, 19)
                        }
+            };
+
+            VerifyCSharpDiagnostic(test, expected);
+        }
+
+        [TestMethod]
+        public void VulnerableAutoAssignment_PropertyAssignmentInClass_ErrorDetected()
+        {
+            var test = @"
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Diagnostics;
+using Newtonsoft.Json;
+
+namespace ConsoleApplication1
+{
+    class TypeName
+    {  
+        private readonly JsonSerializerSettings _serializerSettings = new JsonSerializerSettings()
+        {
+            TypeNameHandling = TypeNameHandling.Objects
+        };
+
+        static void  Main(string[] args)
+        {
+            GetDeserializedObject(""payload"");
+        }
+
+        public static void GetDeserializedObject(string payload)
+        {                
+                var obj = JsonConvert.DeserializeObject<Object>(payload, _serializerSettings); 
+        }
+    }
+}";
+            var expected = new DiagnosticResult
+            {
+                Id = "Vulnerability",
+                Message = String.Format("JsonConvert is possibly vulnerable to a deserialization attack"),
+                Severity = DiagnosticSeverity.Error,
+                Locations =
+                    new[] {
+                            new DiagnosticResultLocation("Test0.cs", 23, 27)
+                        }
             };
 
             VerifyCSharpDiagnostic(test, expected);

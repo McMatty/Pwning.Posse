@@ -45,7 +45,7 @@ namespace Pwning.Posse.Tracker
             {
                 var referenceLocation           = context.Node.GetLocation();
                 var deserializationInvocations  = StaticAnalysisUtilites.FindMemberInnvocation(referenceLocation, _methodName);
-                var binder                      = StaticAnalysisUtilites.FindAssignmentExpressionSyntax(referenceLocation, _binderSetting);
+                var binder                      = StaticAnalysisUtilites.FindLocalAssignmentExpressionSyntax(referenceLocation, _binderSetting);
 
                 isVulnerable = (deserializationInvocations != null && deserializationInvocations.Count() > 0);
                 isVulnerable &=  (binder == null || binder.Right.IsKind(SyntaxKind.NullLiteralExpression));                

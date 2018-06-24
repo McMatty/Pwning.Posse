@@ -162,9 +162,9 @@ namespace Pwning.Posse.CommandLine
             string decompileDirectory = string.Empty;
             if (File.Exists(assemblyFileName))
             {
-                Mono.Cecil.ModuleDefinition module  = null;
-                WholeProjectDecompiler decompiler   = null;
-                try
+                decompileDirectory = FileUtilities.GetDecompileDirectory(assemblyFileName, false);
+
+                if (Directory.Exists(decompileDirectory) && Directory.GetFiles(decompileDirectory).Count() > 0)
                 {
                     module                                              = UniversalAssemblyResolver.LoadMainModule(assemblyFileName, false);
                     decompiler                                          = new WholeProjectDecompiler();
@@ -176,6 +176,7 @@ namespace Pwning.Posse.CommandLine
                         ConsoleOutput.SystemMessage($"Already decompiled located here {decompileDirectory}");
                         //TODO: Add a override option + better faster way to check                      
 
+<<<<<<< HEAD
                         return decompileDirectory;
                     }
                     else
@@ -189,7 +190,7 @@ namespace Pwning.Posse.CommandLine
                 catch(Exception ex)
                 {
                     var message             = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
-                    ConsoleOutput.ErrorMessage($"Decompiling {assemblyFileName} threw an exception with the message {message}");                   
+                    ConsoleOutput.ErrorMessage($"Decompiling {assemblyFileName} threw an exception with the message {message}");
                 }
             }
             else

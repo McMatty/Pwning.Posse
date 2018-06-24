@@ -13,7 +13,7 @@ namespace Pwning.Posse.Tracker
     public class JsonDeserializeTracker : DiagnosticAnalyzer
     {
         private const string _typeName              = "TypeNameHandling";
-        private const string _typeNameSetting       = "TypeNameHandling.Auto";
+        private static readonly string[] _typeNameSettings =  { "TypeNameHandling.Auto",  "TypeNameHandling.Object", "TypeNameHandling.All"};       
         private const string _binderSetting         = "SerializationBinder";
         private const string _serializerSettings    = "JsonSerializerSettings";
         private const string _methodName            = "DeserializeObject";
@@ -65,9 +65,37 @@ namespace Pwning.Posse.Tracker
 
             if (settingsArgument != null && settingsArgument.IsKind(SyntaxKind.ObjectCreationExpression))
             {
-                var hasAutoTypeSetting  = StaticAnalysisUtilites.IsEnumAssignedValue(settingsArgument, _typeName, _typeNameSetting);
+                var hasAutoTypeSetting  = StaticAnalysisUtilites.IsEnumAssignedValue(settingsArgument, _typeName, _typeNameSettings);
                 var hasSerialBinder     = IsAssignedSerialBinder(settingsArgument, context);
                 isVulnerable            = hasAutoTypeSetting && !hasSerialBinder;
+            }
+
+            return isVulnerable;
+        }
+
+        //This will evaluate code created with an inline constructor to assigned properties for a JsonSerializerSettings
+        //e.g Deserialize(payload, new JsonSerializerSettings(){TypeNameHandling = TypeNameHandling.Auto})
+        //Will evaluate if the TypeNameHandling.Auto has been assigned which will make code vulnerable
+        //Then evaluate if a type with the ISerializationBinder has been assigned to settings which will mitigate the risk if TypeNameHandling.Auto assigned
+        private static bool VulnerableFieldConstructor(ExpressionSyntax settingsArgument, SyntaxNodeAnalysisContext context)
+        {
+            //Inline constructor         
+            var isVulnerable = false;
+
+            if (settingsArgument != null && settingsArgument.IsKind(SyntaxKind.IdentifierName))
+            {
+                var declaration    = context.SemanticModel.GetSymbolInfo(settingsArgument).Symbol;
+                var variableType   = StaticAnalysisUtilites.GetTypeFromDeclaration(declaration);
+
+                if (variableType.Name.Equals(_serializerSettings))
+                {
+                    var location            = settingsArgument.GetLocation();
+                    var typeHandlerSetting  = StaticAnalysisUtilites.FindGlobalAssignmentExpressionSyntax(location, _serializerSettings);
+                    var binderSetting       = StaticAnalysisUtilites.FindGlobalAssignmentExpressionSyntax(location, _binderSetting);
+                    var hasAutoTypeSetting  = StaticAnalysisUtilites.IsEnumAssignedValue(typeHandlerSetting, _typeName, _typeNameSettings);
+                    var hasSerialBinder     = IsAssignedSerialBinder(binderSetting, context);
+                    isVulnerable = hasAutoTypeSetting && !hasSerialBinder;
+                }
             }
 
             return isVulnerable;
@@ -83,13 +111,15 @@ namespace Pwning.Posse.Tracker
 
             if (settingsArgument != null && settingsArgument.IsKind(SyntaxKind.IdentifierName))
             {
-                var localDeclaration = context.SemanticModel.GetSymbolInfo(settingsArgument).Symbol;
-                if ((localDeclaration as ILocalSymbol).Type.Name.Equals(_serializerSettings))
+                var localDeclaration    = context.SemanticModel.GetSymbolInfo(settingsArgument).Symbol;
+                var variableType        = StaticAnalysisUtilites.GetTypeFromDeclaration(localDeclaration);
+
+                if (variableType.Name.Equals(_serializerSettings))
                 {
                     var location            = settingsArgument.GetLocation();
-                    var typeHandlerSetting  = StaticAnalysisUtilites.FindAssignmentExpressionSyntax(location, _typeName);
-                    var binderSetting       = StaticAnalysisUtilites.FindAssignmentExpressionSyntax(location, _binderSetting);
-                    var hasAutoTypeSetting  = StaticAnalysisUtilites.IsEnumAssignedValue(typeHandlerSetting, _typeName, _typeNameSetting);
+                    var typeHandlerSetting  = StaticAnalysisUtilites.FindLocalAssignmentExpressionSyntax(location, _typeName);
+                    var binderSetting       = StaticAnalysisUtilites.FindLocalAssignmentExpressionSyntax(location, _binderSetting);
+                    var hasAutoTypeSetting  = StaticAnalysisUtilites.IsEnumAssignedValue(typeHandlerSetting, _typeName, _typeNameSettings);
                     var hasSerialBinder     = IsAssignedSerialBinder(binderSetting, context);
                     isVulnerable            = hasAutoTypeSetting && !hasSerialBinder;
                 }
@@ -97,6 +127,7 @@ namespace Pwning.Posse.Tracker
 
             return isVulnerable;
         }
+
         private static void AnalyzeSyntax(SyntaxNodeAnalysisContext context)
         {
             // TODO: Replace the following code with your own analysis, generating Diagnostic objects for any issues you find
@@ -112,7 +143,18 @@ namespace Pwning.Posse.Tracker
                 if (invocationExpression.ArgumentList.Arguments.Count.Equals(2))
                 {
                     var settingsArgument    = invocationExpression.ArgumentList.Arguments[1].Expression;
-                    isVulnerable            = VulnerableInlineConstructor(settingsArgument, context) || VulnerablePropertySet(settingsArgument, context);
+                    var declaration         = context.SemanticModel.GetSymbolInfo(settingsArgument).Symbol;
+
+                    switch (declaration.Kind)
+                    {
+                        case SymbolKind.Field:
+                            isVulnerable = VulnerableFieldConstructor(settingsArgument, context);
+                            break;
+                        case SymbolKind.Method:
+                        case SymbolKind.Local:
+                            isVulnerable = VulnerableInlineConstructor(settingsArgument, context) || VulnerablePropertySet(settingsArgument, context);
+                            break;
+                    }                   
                 }
 
                 if (isVulnerable)
