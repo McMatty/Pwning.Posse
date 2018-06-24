@@ -39,69 +39,81 @@ namespace Pwning.Posse.CommandLine
                                 .MapResult(
                                             (ScanOptions option) => ProcessScan(option),
                                             (DecompileOptions option) => ProcessDecompile(option),                                            
-                                            (ListOptions option) => ProcessLists(option),
+                                            (ListOptions option) => ListServices(option),
                                             errs => 1);             
         }
 
         private static int ProcessScan(ScanOptions option)
         {
             var targetPath = option.Path;
-            if (!string.IsNullOrEmpty(targetPath))
+            if (Directory.Exists(targetPath))
             {
-                if (!Directory.Exists(targetPath))
-                {
-                    Console.WriteLine($"{targetPath} is not a valid path");
-                    return 1;
-                }
-
                 var searchString    = string.Empty;
                 var pathList        = new List<string>();
 
                 switch (option.FileType)
-                {                   
+                {
                     case FileType.Assemblies:
                         {
-                            Console.WriteLine($"Searching {targetPath} for files ending with '.dll;.exe'");
-                            FindDotNetAssemblies(targetPath, option.Recursive)
-                                                    .ToList()
-                                                    .ForEach(x => pathList.Add(DecompileTarget(x)));
-                            
+                            pathList = ScanAssembly(targetPath, option.Recursive);
                             break;
                         };
                     case FileType.Nuget:
                         {
-                            searchString = ".nupkg";
-                            Console.WriteLine($"Searching {targetPath} for files ending with '{searchString}'");
-                            DotNetAssemblyLocater.FindFiles(targetPath, searchString, option.Recursive)                                
-                                .ForEach(x => FileUtilities.ExtractNugetAssemblies(x)
-                                                          .ForEach(dll => pathList.Add(DecompileTarget(dll))
-                                                          ));
+                            pathList = ScanNuget(targetPath, option.Recursive);
                             break;
                         };
                     case FileType.Project:
                         {
-                            Console.WriteLine($"Searching {targetPath} for files ending with '.csproj'");
+                            ConsoleOutput.Message($"Searching {targetPath} for files ending with '.csproj'");
                             pathList.Add(targetPath);
                             break;
                         };
                     default: break;
-                }                             
+                }
 
                 if (pathList.Count <= 0)
                 {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"No {searchString} files found under {targetPath}");
-                    Console.ResetColor();
+                    ConsoleOutput.ErrorMessage($"No {searchString} files found under {targetPath}");
 
                     return 1;
                 }
-
                 FindDotNetVulnerabilities(pathList, option.Recursive);
 
                 return 0;
             }
+            else
+            {
+                ConsoleOutput.ErrorMessage($"'{targetPath}' is not a valid path");
+            }
 
             return 1;
+        }
+
+        private static List<String> ScanAssembly(string targetPath, bool isRecursive)
+        {
+            ConsoleOutput.Message($"Searching {targetPath} for files ending with '.dll;.exe'");
+
+            var pathList = new List<String>();           
+            FindDotNetAssemblies(targetPath, isRecursive)
+                                    .ToList()
+                                    .ForEach(x => pathList.Add(DecompileTarget(x)));
+
+            return pathList;
+        }
+
+        private static List<String> ScanNuget(string targetPath, bool isRecursive)
+        {
+            var pathList        = new List<String>();
+            var searchString    = ".nupkg";
+            ConsoleOutput.Message($"Searching {targetPath} for files ending with '{searchString}'");
+
+            DotNetAssemblyLocater.FindFiles(targetPath, searchString, isRecursive)
+                .ForEach(x => FileUtilities.ExtractNugetAssemblies(x)
+                                          .ForEach(dll => pathList.Add(DecompileTarget(dll))
+                                          ));
+
+            return pathList;
         }
 
         private static int ProcessDecompile(DecompileOptions option)
@@ -115,28 +127,22 @@ namespace Pwning.Posse.CommandLine
                     var pathList = DotNetAssemblyLocater.FindFiles(outputDirectory, ".csproj");
                     FindDotNetVulnerabilities(pathList, false);
                 }
-
                 return 0;
             }
-
             return 1;
         }
 
-        private static int ProcessLists(ListOptions option)
+        private static int ListServices(ListOptions option)
         {
             if (option.InformationType == InformationType.Services)
             {
-                Console.WriteLine();
-                Console.WriteLine("Displaying services running as localsystem that do not start from system32");
-                Console.ResetColor();
-
+                ConsoleOutput.Message("Displaying services running as localsystem that do not start from system32"); 
                 var serviceList = DotNetServiceUtilities.FindDotNetServices();
 
                 serviceList.ForEach(x =>
                 {
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine("{2,-30}{0,-30}{1, 0}", x.ServiceName, x.ServicePath, x.RunningAs);
-                    Console.ResetColor();
+                    ConsoleOutput.SystemMessage(string.Format("{2,-30}{0,-30}{1, 0}", x.ServiceName, x.ServicePath, x.RunningAs));
+                   
                 });
 
                 if (option.Scan)
@@ -146,10 +152,8 @@ namespace Pwning.Posse.CommandLine
                         ProcessDecompile(new DecompileOptions() { Path = x.ServicePath, ScanOutput = true });
                     });
                 }
-
                 return 0;
             }
-
             return 1;
         }     
 
@@ -157,49 +161,40 @@ namespace Pwning.Posse.CommandLine
         {
             string decompileDirectory = string.Empty;
             if (File.Exists(assemblyFileName))
-            {               
-                var module                                          = UniversalAssemblyResolver.LoadMainModule(assemblyFileName, false);
-                WholeProjectDecompiler decompiler                   = new WholeProjectDecompiler();
-                decompiler.Settings.ThrowOnAssemblyResolveErrors    = false;
-                decompileDirectory                                  = FileUtilities.GetDecompileDirectory(assemblyFileName, false);
-
-                if(Directory.Exists(decompileDirectory) && Directory.GetFiles(decompileDirectory).Count() > 0)
-                {
-                    //TODO: Add a override option + better faster way to check
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine();
-                    Console.WriteLine($"Already decompiled located here {decompileDirectory}");
-                    Console.ResetColor();
-
-                    return decompileDirectory;
-                }
-                else
-                {
-                    Directory.CreateDirectory(decompileDirectory);
-                }
-
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine();
-                Console.WriteLine($"Decompiling {assemblyFileName} to {decompileDirectory}");
-                Console.ResetColor();
-
+            {
+                Mono.Cecil.ModuleDefinition module  = null;
+                WholeProjectDecompiler decompiler   = null;
                 try
                 {
+                    module                                              = UniversalAssemblyResolver.LoadMainModule(assemblyFileName, false);
+                    decompiler                                          = new WholeProjectDecompiler();
+                    decompiler.Settings.ThrowOnAssemblyResolveErrors    = false;
+                    decompileDirectory                                  = FileUtilities.GetDecompileDirectory(assemblyFileName, false);
+
+                    if(Directory.Exists(decompileDirectory) && Directory.GetFiles(decompileDirectory).Count() > 0)
+                    {
+                        ConsoleOutput.SystemMessage($"Already decompiled located here {decompileDirectory}");
+                        //TODO: Add a override option + better faster way to check                      
+
+                        return decompileDirectory;
+                    }
+                    else
+                    {
+                        Directory.CreateDirectory(decompileDirectory);
+                    }
+
+                    ConsoleOutput.SystemMessage($"Decompiling {assemblyFileName} to {decompileDirectory}"); 
                     decompiler.DecompileProject(module, decompileDirectory);                   
                 }
                 catch(Exception ex)
                 {
                     var message             = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"Decompiling {assemblyFileName} threw an exception with the message {message}");
-                    Console.ResetColor();
+                    ConsoleOutput.ErrorMessage($"Decompiling {assemblyFileName} threw an exception with the message {message}");                   
                 }
             }
             else
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"The assembly '{assemblyFileName}' does not exist");
-                Console.ResetColor();
+            {                
+                ConsoleOutput.ErrorMessage($"The assembly '{assemblyFileName}' does not exist");               
             }
 
             return decompileDirectory;
@@ -207,30 +202,25 @@ namespace Pwning.Posse.CommandLine
         
         static void FindDotNetVulnerabilities(List<string> pathList, bool isRecursive)
         {
-            pathList.SelectMany(x => AnalyzeDotNetAssemblies(DotNetAssemblyLocater.FindFiles(x, ".csproj", isRecursive)))
-                   .AsParallel()
-                   .ForAll(issue =>
+            pathList.SelectMany(x => AnalyzeDotNetAssemblies(DotNetAssemblyLocater.FindFiles(x, ".csproj", isRecursive)))                    
+                   .ToList()                   
+                   .ForEach(issue =>
                    {
-                       Console.ForegroundColor = ConsoleColor.Red;
-                       Console.WriteLine("{0} {1})", issue.GetMessage(), issue.Location.GetMappedLineSpan());
-                       Console.ResetColor();
+                       ConsoleOutput.ErrorMessage(string.Format("{0} {1})", issue.GetMessage(), issue.Location.GetMappedLineSpan()));
                    });
         }
 
         static IEnumerable<string> FindDotNetAssemblies(string rootPath, bool recursiveSearch)
         {
-            //TODO: Save details to disk + add stop and restore during process
-            Console.ForegroundColor = ConsoleColor.DarkGreen;
-            Console.WriteLine("Scanning for .Net assemblies");
+            //TODO: Save details to disk + add stop and restore during process           
+            ConsoleOutput.HeaderMessage("Scanning for .Net assemblies");
             if (recursiveSearch)
             {
-                Console.WriteLine("This will take some time if a high root folder has been selected");
-            }
-            Console.ResetColor();          
+                ConsoleOutput.Message("This will take some time if a high root folder has been selected");
+            }              
            
-            var allAssemblies   = DotNetAssemblyLocater.FindFiles(rootPath, ".exe;.dll", recursiveSearch).Where(x => DotNetAssemblyLocater.IsDotNetAssembly(x));            
-
-            Console.WriteLine($"Found {allAssemblies.Count()} .Net assemblies");
+            var allAssemblies   = DotNetAssemblyLocater.FindFiles(rootPath, ".exe;.dll", recursiveSearch).Where(x => DotNetAssemblyLocater.IsDotNetAssembly(x));
+            ConsoleOutput.Message($"Found {allAssemblies.Count()} .Net assemblies");
 
             return allAssemblies;
         }
@@ -241,16 +231,20 @@ namespace Pwning.Posse.CommandLine
             var msWorkspace             = MSBuildWorkspace.Create();
 
             projectFiles.ToList().ForEach(x =>
-            {                
-                var project         = msWorkspace.OpenProjectAsync(x).Result;
+            {
+                try
+                {
+                    var project             = msWorkspace.OpenProjectAsync(x).Result;
+                    ConsoleOutput.SystemMessage($"Inspecting project {project.FilePath}");                   
 
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine();
-                Console.WriteLine($"Inspecting project {project.FilePath}");
-                Console.ResetColor();
-                             
-                var compilationWithAnalyzers        = project.GetCompilationAsync().Result.WithAnalyzers(_analyzers.ToImmutableArray());
-                issueList.AddRange(compilationWithAnalyzers.GetAnalyzerDiagnosticsAsync().Result);                
+                    var compilationWithAnalyzers = project.GetCompilationAsync().Result.WithAnalyzers(_analyzers.ToImmutableArray());
+                    issueList.AddRange(compilationWithAnalyzers.GetAnalyzerDiagnosticsAsync().Result);
+                }
+                catch(Exception ex)
+                {
+                    ConsoleOutput.ErrorMessage($"Error loading {x} - '{ex.Message}'");                  
+                }
+               
             });
 
             return issueList;
