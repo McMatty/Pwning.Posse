@@ -240,6 +240,7 @@ namespace Pwning.Posse.CommandLine
                 try
                 {
                     var project = msWorkspace.OpenProjectAsync(x).Result;
+                   
                     ConsoleOutput.SystemMessage($"Inspecting project {project.FilePath}");
 
                     var compilationWithAnalyzers = project.GetCompilationAsync().Result.WithAnalyzers(_analyzers.ToImmutableArray());

@@ -13,8 +13,8 @@ namespace Pwning.Posse.Tracker
     {
         private static string _namespace        = "System.Xml.XmlDocument";
         private static string _methodName       = "LoadXml";
-        private static string _dtdProcessing    = "DtdProcessing";
-        private static string _dtdProhibit      = "DtdProcessing.Prohibit";
+        private static string _xmlResolver      = "XmlResolver";
+       
 
         // You can change these strings in the Resources.resx file. If you do not want your analyzer to be localize-able, you can use regular strings for Title and MessageFormat.
         // See https://github.com/dotnet/roslyn/blob/master/docs/analyzers/Localizing%20Analyzers.md for more on localization
@@ -29,12 +29,12 @@ namespace Pwning.Posse.Tracker
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get { return ImmutableArray.Create(Rule); } }
 
         public override void Initialize(AnalysisContext context)
-        {
+        {            
             context.RegisterSyntaxNodeAction(AnalyzeSyntax, SyntaxKind.InvocationExpression);
         }
 
         private static void AnalyzeSyntax(SyntaxNodeAnalysisContext context)
-        {
+        {           
             // TODO: Replace the following code with your own analysis, generating Diagnostic objects for any issues you find
             var symbol          = context.SemanticModel.GetSymbolInfo(context.Node);
             var namedTypeSymbol = symbol.Symbol as IMethodSymbol;
@@ -44,20 +44,19 @@ namespace Pwning.Posse.Tracker
             if (StaticAnalysisUtilites.IsClassAndMethod(namedTypeSymbol, _namespace, _methodName))
             {
                 var referenceLocation           = context.Node.GetLocation();
-                var deserializationInvocations  = StaticAnalysisUtilites.FindMemberInnvocation(referenceLocation, _dtdProcessing);
-                var dtdProcessing               = StaticAnalysisUtilites.FindLocalAssignmentExpressionSyntax(referenceLocation, _dtdProcessing);
+                var xmlResolver                 = StaticAnalysisUtilites.FindLocalAssignmentExpressionSyntax(referenceLocation, _xmlResolver);               
+                var dotNetVersion               = context.Compilation.ExternalReferences.LanguageToDotNetVersion();
+                isVulnerable                    = (dotNetVersion < DotNetVersion.DotNet4_6);
+                isVulnerable                    |= (xmlResolver != null && !xmlResolver.Right.IsKind(SyntaxKind.NullLiteralExpression));
 
-                isVulnerable = (deserializationInvocations == null || deserializationInvocations.Count() <= 0);
-                isVulnerable &= (dtdProcessing == null || dtdProcessing.Right.IsKind(SyntaxKind.NullLiteralExpression));
-            }
+                if (isVulnerable)
+                {
+                    var location    = context.Node.GetLocation();
+                    var diagnostic  = Diagnostic.Create(Rule, location, namedTypeSymbol.Name, dotNetVersion.ToString());
 
-            if (isVulnerable)
-            {
-                var location = context.Node.GetLocation();
-                var diagnostic = Diagnostic.Create(Rule, location, namedTypeSymbol.Name);
-
-                context.ReportDiagnostic(diagnostic);
-            }
+                    context.ReportDiagnostic(diagnostic);
+                }
+            }           
         }
     }
 }

@@ -70,7 +70,7 @@ namespace Pwning.Posse.Tracker.Analyzers.XXETracker {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to XMLDocument is open to XXE attacks.
+        ///   Looks up a localized string similar to &apos;{0}&apos; is open to XXE attacks. Running framework {1}.
         /// </summary>
         internal static string AnalyzerMessageFormat {
             get {

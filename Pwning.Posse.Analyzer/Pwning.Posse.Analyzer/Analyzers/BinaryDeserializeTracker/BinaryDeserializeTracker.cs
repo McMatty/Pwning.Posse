@@ -48,16 +48,16 @@ namespace Pwning.Posse.Tracker
                 var binder                      = StaticAnalysisUtilites.FindLocalAssignmentExpressionSyntax(referenceLocation, _binderSetting);
 
                 isVulnerable = (deserializationInvocations != null && deserializationInvocations.Count() > 0);
-                isVulnerable &=  (binder == null || binder.Right.IsKind(SyntaxKind.NullLiteralExpression));                
-            }
+                isVulnerable &=  (binder == null || binder.Right.IsKind(SyntaxKind.NullLiteralExpression));
 
-            if (isVulnerable)
-            {
+                if (isVulnerable)
+                {
                     var location    = context.Node.GetLocation();
                     var diagnostic  = Diagnostic.Create(Rule, location, namedTypeSymbol.Name);
 
                     context.ReportDiagnostic(diagnostic);
-            }            
+                }
+            }                     
         }
     }
 }

@@ -373,7 +373,7 @@ namespace ConsoleApplication1
     {  
         private readonly JsonSerializerSettings _serializerSettings = new JsonSerializerSettings()
         {
-            TypeNameHandling = TypeNameHandling.Object
+            TypeNameHandling = TypeNameHandling.Objects
         };
 
         static void  Main(string[] args)
@@ -398,7 +398,7 @@ namespace ConsoleApplication1
                         }
             };
 
-            VerifyCSharpDiagnostic(test);
+            VerifyCSharpDiagnostic(test, expected);
         }
 
         [TestMethod]

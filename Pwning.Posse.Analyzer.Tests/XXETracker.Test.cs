@@ -29,18 +29,33 @@ using System.Xml;
 
 namespace ConsoleApplication1
 {
+    public class CachedXmlResolver : XmlUrlResolver
+    {
+        public override object GetEntity(Uri absoluteUri, string role, Type ofObjectToReturn)
+        {
+            return base.GetEntity(absoluteUri, role, ofObjectToReturn);
+        }
+
+        public override Uri ResolveUri(Uri baseUri, string relativeUri)
+        {
+            return base.ResolveUri(baseUri, relativeUri);
+        }
+    }
+
     internal class XmlUtility
     {
         internal static XmlDocument ToXmlDocument(string xml)
         {
-            var xmlDocument = new XmlDocument();
+            var xmlDocument = new XmlDocument();  
+            xmlDocument.XmlResolver = new XmlResolver();
             xmlDocument.LoadXml(xml);
 
             return xmlDocument;
         }
     }
-}";      
-            VerifyCSharpDiagnostic(test);            
+}";           
+
+            VerifyCSharpDiagnostic(test);                  
         }
 
         //Diagnostic and CodeFix both triggered and checked for
@@ -53,11 +68,25 @@ using System.Xml;
 
 namespace ConsoleApplication1
 {
+    public class CachedXmlResolver : XmlUrlResolver
+    {
+        public override object GetEntity(Uri absoluteUri, string role, Type ofObjectToReturn)
+        {
+            return base.GetEntity(absoluteUri, role, ofObjectToReturn);
+        }
+
+        public override Uri ResolveUri(Uri baseUri, string relativeUri)
+        {
+            return base.ResolveUri(baseUri, relativeUri);
+        }
+    }
+
     internal class XmlUtility
     {
         internal static XmlDocument ToXmlDocument(string xml)
         {
-            var xmlDocument = new XmlDocument();
+            var xmlDocument         = new XmlDocument();
+            xmlDocument.XmlResolver = new CachedXmlResolver();
             xmlDocument.LoadXml(xml);
 
             return xmlDocument;
@@ -67,11 +96,11 @@ namespace ConsoleApplication1
             var expected = new DiagnosticResult
             {
                 Id = "Vulnerability",
-                Message = String.Format("JsonConvert is possibly vulnerable to a deserialization attack"),
+                Message = String.Format("'LoadXml' is open to XXE attacks. Running framework NetStandard1_3"),
                 Severity = DiagnosticSeverity.Error,
                 Locations =
                     new[] {
-                            new DiagnosticResultLocation("Test0.cs", 21, 27)
+                            new DiagnosticResultLocation("Test0.cs", 26, 13)
                         }
             };
 

@@ -11,10 +11,17 @@ namespace Pwning.Posse.CommandLine
             Console.ResetColor();
         }
 
+        public static void ExceptionMessage(Exception exception)
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            var exceptionMessage    = exception.InnerException != null ? exception.InnerException.Message : exception.Message;
+            Console.WriteLine(exceptionMessage);
+            Console.ResetColor();
+        }
+
         public static void SystemMessage(string message)
         {
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine();
+            Console.ForegroundColor = ConsoleColor.Green;           
             Console.WriteLine(message);
             Console.ResetColor();            
         }

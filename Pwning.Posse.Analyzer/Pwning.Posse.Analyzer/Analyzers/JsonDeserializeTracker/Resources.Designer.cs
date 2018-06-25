@@ -70,7 +70,7 @@ namespace Pwning.Posse.Tracker.Analyzers.JsonDeserializeTracker {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to JsonConvert  is possibly vulnerable to a deserialization attack.
+        ///   Looks up a localized string similar to JsonConvert possibly vulnerable to a deserialization attack.
         /// </summary>
         internal static string AnalyzerMessageFormat {
             get {

@@ -122,7 +122,7 @@
     <comment>An optional longer localizable description of the diagnostic.</comment>
   </data>
   <data name="AnalyzerMessageFormat" xml:space="preserve">
-    <value>XMLDocument is open to XXE attacks</value>
+    <value>'{0}' is open to XXE attacks. Running framework {1}</value>
     <comment>The format-able message the diagnostic displays.</comment>
   </data>
   <data name="AnalyzerTitle" xml:space="preserve">

@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Pwning.Posse.Common;
 using Pwning.Posse.Tracker.Analyzers.JsonDeserializeTracker;
+using System;
 using System.Collections.Immutable;
 using System.Linq;
 
@@ -12,13 +13,13 @@ namespace Pwning.Posse.Tracker
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
     public class JsonDeserializeTracker : DiagnosticAnalyzer
     {
-        private const string _typeName              = "TypeNameHandling";
-        private static readonly string[] _typeNameSettings =  { "TypeNameHandling.Auto",  "TypeNameHandling.Object", "TypeNameHandling.All"};       
-        private const string _binderSetting         = "SerializationBinder";
-        private const string _serializerSettings    = "JsonSerializerSettings";
-        private const string _methodName            = "DeserializeObject";
-        private const string _namespace             = "Newtonsoft.Json.JsonConvert";
-        private static string _binderInterface      = "Newtonsoft.Json.Serialization.ISerializationBinder";
+        private const string _typeName                                  = "TypeNameHandling";
+        private static readonly string[] _vulnerabletypeNameSettings    =  {"TypeNameHandling.Auto",  "TypeNameHandling.Objects", "TypeNameHandling.All"};       
+        private const string _binderSetting                             = "SerializationBinder";
+        private const string _serializerSettings                        = "JsonSerializerSettings";
+        private const string _methodName                                = "DeserializeObject";
+        private const string _namespace                                 = "Newtonsoft.Json.JsonConvert";
+        private static string _binderInterface                          = "Newtonsoft.Json.Serialization.ISerializationBinder";
 
         // You can change these strings in the Resources.resx file. If you do not want your analyzer to be localize-able, you can use regular strings for Title and MessageFormat.
         // See https://github.com/dotnet/roslyn/blob/master/docs/analyzers/Localizing%20Analyzers.md for more on localization
@@ -66,7 +67,7 @@ namespace Pwning.Posse.Tracker
 
             if (settingsArgument != null && settingsArgument.IsKind(SyntaxKind.ObjectCreationExpression))
             {
-                var hasAutoTypeSetting  = StaticAnalysisUtilites.IsAssignedValue(settingsArgument, _typeName, _typeNameSettings);
+                var hasAutoTypeSetting  = StaticAnalysisUtilites.IsAssignedValue(settingsArgument, _typeName, _vulnerabletypeNameSettings);
                 var hasSerialBinder     = IsAssignedSerialBinder(settingsArgument, context);
                 isVulnerable            = hasAutoTypeSetting && !hasSerialBinder;
             }
@@ -92,7 +93,7 @@ namespace Pwning.Posse.Tracker
                 {
                     var location            = (declaration as IFieldSymbol).Locations.First();
                     var declearationNode    = StaticAnalysisUtilites.FindDeclearationNode(location);
-                    var hasAutoTypeSetting  = StaticAnalysisUtilites.IsAssignedValue(declearationNode, _typeName, _typeNameSettings);
+                    var hasAutoTypeSetting  = StaticAnalysisUtilites.IsAssignedValue(declearationNode, _typeName, _vulnerabletypeNameSettings);
                     var hasSerialBinder     = IsAssignedSerialBinder(declearationNode, context);
                     isVulnerable            = hasAutoTypeSetting && !hasSerialBinder;
                 }
@@ -119,7 +120,7 @@ namespace Pwning.Posse.Tracker
                     var location            = settingsArgument.GetLocation();
                     var typeHandlerSetting  = StaticAnalysisUtilites.FindLocalAssignmentExpressionSyntax(location, _typeName);
                     var binderSetting       = StaticAnalysisUtilites.FindLocalAssignmentExpressionSyntax(location, _binderSetting);
-                    var hasAutoTypeSetting  = StaticAnalysisUtilites.IsAssignedValue(typeHandlerSetting, _typeName, _typeNameSettings);
+                    var hasAutoTypeSetting  = StaticAnalysisUtilites.IsAssignedValue(typeHandlerSetting, _typeName, _vulnerabletypeNameSettings);
                     var hasSerialBinder     = IsAssignedSerialBinder(binderSetting, context);
                     isVulnerable            = hasAutoTypeSetting && !hasSerialBinder;
                 }
@@ -142,20 +143,28 @@ namespace Pwning.Posse.Tracker
 
                 if (invocationExpression.ArgumentList.Arguments.Count.Equals(2))
                 {
-                    var settingsArgument    = invocationExpression.ArgumentList.Arguments[1].Expression;
-                    var declaration         = context.SemanticModel.GetSymbolInfo(settingsArgument).Symbol;
-
-                    //TODO: Setup a state object here for field types
-                    switch (declaration.Kind)
+                    try
                     {
-                        case SymbolKind.Field:
-                            isVulnerable = VulnerableFieldConstructor(settingsArgument, context);
-                            break;
-                        case SymbolKind.Method:
-                        case SymbolKind.Local:
-                            isVulnerable = VulnerableInlineConstructor(settingsArgument, context) || VulnerablePropertySet(settingsArgument, context);
-                            break;
-                    }                   
+                        var settingsArgument = invocationExpression.ArgumentList.Arguments[1].Expression;
+                        var declaration = context.SemanticModel.GetSymbolInfo(settingsArgument).Symbol;
+
+                        //TODO: Setup a state object here for field types
+                        switch (declaration.Kind)
+                        {
+                            case SymbolKind.Field:
+                                isVulnerable = VulnerableFieldConstructor(settingsArgument, context);
+                                break;
+                            case SymbolKind.Method:
+                            case SymbolKind.Local:
+                                isVulnerable = VulnerableInlineConstructor(settingsArgument, context) || VulnerablePropertySet(settingsArgument, context);
+                                break;
+                        }
+                    }
+                    catch(Exception ex)
+                    {
+                        var exceptionMessage = ex.InnerException != null ? ex.InnerException.Message : ex.Message;                        
+                        throw new Exception($"The error '{exceptionMessage}' occured while parsing {context.Node.SyntaxTree.FilePath}");
+                    }
                 }
 
                 if (isVulnerable)
