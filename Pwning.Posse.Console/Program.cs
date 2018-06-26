@@ -207,6 +207,7 @@ namespace Pwning.Posse.CommandLine
         static void FindDotNetVulnerabilities(List<string> pathList, bool isRecursive)
         {
             pathList.SelectMany(x => AnalyzeDotNetAssemblies(DotNetAssemblyLocater.FindFiles(x, ".csproj", isRecursive)))
+                   .OrderBy(x => x.GetMessage())
                    .ToList()
                    .ForEach(issue =>
                    {
