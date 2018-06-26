@@ -61,7 +61,7 @@ namespace Pwning.Posse.Analyzer.Analyzers.XXEAnalyzer {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to XMLDocument has not disabled DTD.
+        ///   Looks up a localized string similar to XmlDocument has not disabled DTD.
         /// </summary>
         internal static string AnalyzerDescription {
             get {
@@ -70,7 +70,7 @@ namespace Pwning.Posse.Analyzer.Analyzers.XXEAnalyzer {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &apos;{0}&apos; is open to XXE attacks. Running framework {1}.
+        ///   Looks up a localized string similar to XmlDocument is possibly vulnerable to a XXE attack. Running framework {0}.
         /// </summary>
         internal static string AnalyzerMessageFormat {
             get {
@@ -79,7 +79,7 @@ namespace Pwning.Posse.Analyzer.Analyzers.XXEAnalyzer {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to XML vulnerability found.
+        ///   Looks up a localized string similar to Xml vulnerability found.
         /// </summary>
         internal static string AnalyzerTitle {
             get {

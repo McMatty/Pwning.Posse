@@ -82,7 +82,7 @@ namespace Pwning.Posse.Analyzer
                 if (isVulnerable)
                 {
                     var location    = context.Node.GetLocation();
-                    var diagnostic  = Diagnostic.Create(Rule, location, namedTypeSymbol.Name, dotNetVersion.ToString());
+                    var diagnostic  = Diagnostic.Create(Rule, location, dotNetVersion.ToString());
 
                     context.ReportDiagnostic(diagnostic);
                 }

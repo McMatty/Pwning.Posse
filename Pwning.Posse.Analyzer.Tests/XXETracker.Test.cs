@@ -1,9 +1,8 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
 using Pwning.Posse.Analyzer.Tests.TestHelper;
-using Pwning.Posse.Analyzer;
+using System;
 
 namespace Pwning.Posse.Analyzer.Tests
 {
@@ -120,7 +119,7 @@ namespace ConsoleApplication1
             var expected = new DiagnosticResult
             {
                 Id = "Vulnerability",
-                Message = String.Format("'LoadXml' is open to XXE attacks. Running framework NetStandard1_3"),
+                Message = String.Format("XmlDocument is possibly vulnerable to a XXE attack. Running framework NetStandard1_3"),
                 Severity = DiagnosticSeverity.Error,
                 Locations =
                     new[] {
@@ -172,7 +171,7 @@ namespace ConsoleApplication1
             var expected = new DiagnosticResult
             {
                 Id = "Vulnerability",
-                Message = String.Format("'LoadXml' is open to XXE attacks. Running framework NetStandard1_3"),
+                Message = String.Format("XmlDocument is possibly vulnerable to a XXE attack. Running framework NetStandard1_3"),
                 Severity = DiagnosticSeverity.Error,
                 Locations =
                     new[] {
