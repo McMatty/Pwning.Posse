@@ -20,7 +20,7 @@
     <Copyright>Copyright</Copyright>
     <PackageTags>Pwning.Posse.Analyzer, analyzers</PackageTags>
     <NoPackageAnalysis>true</NoPackageAnalysis>
-    <AssemblyName>Pwning.Posse.Tracker</AssemblyName>
+    <AssemblyName>Pwning.Posse.Analyzer</AssemblyName>
     <Company />
   </PropertyGroup>
   
@@ -36,15 +36,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Update="Analyzers\BinaryDeserializeTracker\Resources.resx">
+    <EmbeddedResource Update="Analyzers\BinaryDeserializeAnalyzer\Resources.resx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <Generator>ResXFileCodeGenerator</Generator>
     </EmbeddedResource>
-    <EmbeddedResource Update="Analyzers\JsonDeserializeTracker\Resources.resx" Generator="ResXFileCodeGenerator" LastGenOutput="Resources.Designer.cs">
+    <EmbeddedResource Update="Analyzers\JsonDeserializeAnalyzer\Resources.resx" Generator="ResXFileCodeGenerator" LastGenOutput="Resources.Designer.cs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
-    <EmbeddedResource Update="Analyzers\XXETracker\Resources.resx">
+    <EmbeddedResource Update="Analyzers\XXEAnalyzer\Resources.resx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <Generator>ResXFileCodeGenerator</Generator>
@@ -61,17 +61,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Analyzers\BinaryDeserializeTracker\Resources.Designer.cs">
+    <Compile Update="Analyzers\BinaryDeserializeAnalyzer\Resources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Update="Analyzers\JsonDeserializeTracker\Resources.Designer.cs">
+    <Compile Update="Analyzers\JsonDeserializeAnalyzer\Resources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Update="Analyzers\XXETracker\Resources.Designer.cs">
+    <Compile Update="Analyzers\XXEAnalyzer\Resources.Designer.cs">
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>

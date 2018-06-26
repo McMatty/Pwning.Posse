@@ -6,7 +6,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.MSBuild;
 using Mono.Cecil;
 using Pwning.Posse.CommandLine.Options;
-using Pwning.Posse.Tracker;
+using Pwning.Posse.Analyzer;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -24,7 +24,7 @@ namespace Pwning.Posse.CommandLine
         public static extern bool ShowWindow(System.IntPtr hWnd, int cmdShow);
 
         //TODO:IOC or reflection to load all analyzers   
-        private static List<DiagnosticAnalyzer> _analyzers = new List<DiagnosticAnalyzer>() { new BinaryDeserializeTracker(), new XXETracker(), new JsonDeserializeTracker() };
+        private static List<DiagnosticAnalyzer> _analyzers = new List<DiagnosticAnalyzer>() { new BinaryDeserializeAnalyzer(), new XXEAnalyzer(), new JsonDeserializeAnalyzer() };
 
         static void MaximizeWindow()
         {
@@ -250,7 +250,6 @@ namespace Pwning.Posse.CommandLine
                 {
                     ConsoleOutput.ErrorMessage($"Error loading {x} - '{ex.Message}'");
                 }
-
             });
 
             return issueList;

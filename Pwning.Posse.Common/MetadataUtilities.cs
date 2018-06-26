@@ -38,14 +38,14 @@ namespace Pwning.Posse.Common
                                                                 "netstandard1.5",
                                                                 "netstandard1.6",
                                                                 "netstandard2.0",
-                                                                "v1.0",
-                                                                "v1.1",
-                                                                "v2.0",
-                                                                "v3.0",
-                                                                "v3.5",
-                                                                "v4.0",
-                                                                "v4.5",
-                                                                "v4.6"};
+                                                               "v1.0",
+                                                               "v1.1",
+                                                               "v2.0",
+                                                               "v3.0",
+                                                               "v3.5",
+                                                               "v4.0",
+                                                               "v4.5",
+                                                               "v4.6"};
         public static DotNetVersion LanguageToDotNetVersion(this ImmutableArray<MetadataReference> metadataReference)
         {
             var matchingString = frameworkArray.Where(x => metadataReference.Any(y => y.Display.Contains(x))).FirstOrDefault();

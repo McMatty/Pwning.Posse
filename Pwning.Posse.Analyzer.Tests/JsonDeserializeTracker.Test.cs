@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using Pwning.Posse.Analyzer.Tests.TestHelper;
-using Pwning.Posse.Tracker;
+using Pwning.Posse.Analyzer;
 
 namespace Pwning.Posse.Analyzer.Tests
 {
@@ -467,7 +467,7 @@ namespace ConsoleApplication1
 
         protected override DiagnosticAnalyzer GetCSharpDiagnosticAnalyzer()
         {
-            return new JsonDeserializeTracker();
+            return new JsonDeserializeAnalyzer();
         }
     }
 }

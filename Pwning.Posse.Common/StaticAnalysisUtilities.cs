@@ -1,7 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.FindSymbols;
+using Microsoft.CodeAnalysis.Diagnostics;
 using System.Linq;
 
 namespace Pwning.Posse.Common
@@ -11,16 +10,7 @@ namespace Pwning.Posse.Common
         public static bool IsClassAndMethod(IMethodSymbol namedTypeSymbol, string @namespace, string method)
         {
             return namedTypeSymbol != null && namedTypeSymbol.Name.Equals(method) && namedTypeSymbol.ReceiverType.ToString().Equals(@namespace);
-        }
-
-        //Checks for an expected assignment (only useful for enums which have a set of possible values)
-        //Checks the left property is being assigned the expected propert on the right
-        public static bool IsAssignedValue(SyntaxNode argument, string left, string right)
-        {
-            return argument.DescendantNodesAndSelf()
-                            .OfType<AssignmentExpressionSyntax>()
-                            .Any(x => x.Left.ToString().Contains(left) && x.Right.ToString().Equals(right));
-        }
+        }        
 
         //Checks for an expected assignment (only useful for enums which have a set of possible values)
         //Checks the left property is being assigned the expected propert on the right
@@ -31,15 +21,55 @@ namespace Pwning.Posse.Common
                             .Any(x => x.Left.ToString().Contains(left) && right.Contains(x.Right.ToString()));
         }
 
-        public static Location GetLocation(ISymbol declaredSymbol, Solution solution)
+        //Checks that argument being assigned is being assigned a class that implements the ISerializationBinder interface
+        //TODO: Very brittle check - should be updated later
+        public static bool IsAssignedInterface(SyntaxNode argument, SyntaxNodeAnalysisContext context, string interfaceName)
         {
-            var references = SymbolFinder.FindReferencesAsync(declaredSymbol, solution).Result;
-            var location = references
-                .FirstOrDefault()
-                .Locations
-                .FirstOrDefault().Location;
+            if (argument == null) return false;
 
-            return location;
+            return argument.DescendantNodesAndSelf()
+                            .OfType<AssignmentExpressionSyntax>()
+                            .Any(x =>
+                            {
+                                var symbol = context.SemanticModel.GetSymbolInfo(x.Right).Symbol;
+                                if (symbol == null) return false;
+
+                                var symbolType = GetTypeFromDeclaration(symbol);
+                                return symbolType.AllInterfaces.Any(@interface => @interface.OriginalDefinition.ToDisplayString().Equals(interfaceName));
+                            });
+        }
+
+        //TODO: Very brittle check - should be updated later
+        //Jesus - this feels wrong
+        //Attempting to get the base class of the object being assigned
+        public static bool IsAssignedNewObjectInline(SyntaxNode argument, SyntaxNodeAnalysisContext context, string propertyName, string baseClassName)
+        {
+            if (argument == null) return false;
+
+            //Step 1 Take a node and look for an assignment. The initial argument should be an object creation as this purpose
+            //is to find assignments in object initializers
+            return argument.DescendantNodes().OfType<AssignmentExpressionSyntax>()
+                                             .Any(x =>
+                                             {
+                                                 //Step2. Due the scatter gun method of search ensure that the property matches the target being searched for
+                                                 var identifier = x.Left as IdentifierNameSyntax;
+                                                 if (identifier == null || !identifier.Identifier.ToString().Equals(propertyName))
+                                                 {
+                                                     return false;
+                                                 }
+
+                                                 //Step3. The assignment should be an object creation (property assignment is already covered)
+                                                 var objectCreation = x.Right as ObjectCreationExpressionSyntax;
+                                                 var symbol         = context.SemanticModel.GetSymbolInfo(objectCreation.Type).Symbol;
+                                                 if (symbol == null) return false;
+
+                                                 //Step4 determine the class definition of the object being created.
+                                                 //Then search the base classes for the type that is used to assign to the inline property
+                                                 var classSyntax = symbol.DeclaringSyntaxReferences.First().GetSyntax() as ClassDeclarationSyntax;
+                                                 return classSyntax.BaseList
+                                                                 .Types
+                                                                 .Any(baseClass => baseClass.ToString().Equals(baseClassName));
+                                             });
         }
 
         public static ITypeSymbol GetTypeFromDeclaration(ISymbol variable)
@@ -52,7 +82,7 @@ namespace Pwning.Posse.Common
                     break;
                 case SymbolKind.Local:
                     type = ((ILocalSymbol)variable).Type;
-                    break;
+                    break;               
             }
 
             return type;
@@ -75,12 +105,20 @@ namespace Pwning.Posse.Common
             return memberAccess;
         }
 
+        public static SyntaxNode RetrieveMethodOwningObject(InvocationExpressionSyntax invocation)
+        {
+            var expression = invocation.DescendantNodes().OfType<MemberAccessExpressionSyntax>().FirstOrDefault()?.Expression;
+            if (expression == null) return null;
+                
+            return  FindDeclearationNode(expression.GetLocation());
+        }
+
         public static SyntaxNode FindDeclearationNode(Location referenceLocation)
         {
             return referenceLocation.SourceTree.GetRoot().FindNode(referenceLocation.SourceSpan);
         }
 
-        //TODO: Remove this as ThisExpressionSyntax declaration check gives us the location
+        //TODO: Brittle - doesn't check the object making the call - can lead to false reuslts given rigth circumstances
         //This is for a local declaration value - so we only go up to the first blockSyntax as after that we will be out of scope
         //Step 2 Find MemberAccessExpression as this is working against the delcaration found
         //Step 3 Go down the tree to the identifer of the AccessExpression as validation that the property being looked for matches
@@ -95,52 +133,6 @@ namespace Pwning.Posse.Common
                                                         .FirstOrDefault()).FirstOrDefault();
 
             return memberAccess;
-        }
-
-        //This is a class field value - so we only go up to the class declaration and work down
-        //Step 2 Find ClassDeclarationSyntax as this is working against the delcaration found
-        //Step 3 Go down the tree to the FieldDeclarationSyntax and begin inspecting this
-        //Step 4 Go down from this branch to get the memberAccessExpression - then inspect the values of type and settings to make sure we have the right field
-        //Step 5 If a match is found select back up the tree the first AssignmentExpression. This is the value needed as the requirement is to check what is assigned in the right
-        public static AssignmentExpressionSyntax FindGlobalAssignmentExpressionSyntax(Location referenceLocation, string memberName)
-        {
-            var referenceNode = referenceLocation.SourceTree.GetRoot().FindNode(referenceLocation.SourceSpan);
-            var memberAccess = referenceNode.Ancestors().OfType<ClassDeclarationSyntax>()
-                                                        .FirstOrDefault()?.DescendantNodes().OfType<FieldDeclarationSyntax>().First();
-
-
-            return null;// memberAccess;
-        }        
-
-        public static LocalDeclarationStatementSyntax FindLocalIdentifierDeclaration(IdentifierNameSyntax identifierName)
-        {
-            var block = identifierName.Ancestors()
-                  .OfType<BlockSyntax>()
-                  .First();
-
-            return GetLocalDeclaration(block, identifierName.Identifier.Text);
-        }
-
-        public static LocalDeclarationStatementSyntax GetLocalDeclaration(BlockSyntax blockSyntax, string identifierString)
-        {
-            //This should be changed so it goes to the method declaration and then goes down the branches searching instead of bottom up
-            var foundBlock = blockSyntax.DescendantNodes()
-                                        .OfType<LocalDeclarationStatementSyntax>()
-                                        .Where(x => x.Declaration.Variables.Where(v => v.Identifier.Text == identifierString).Count() > 0)
-                                        .FirstOrDefault();
-
-            if (foundBlock == null)
-            {
-                var parentBlock = blockSyntax.Ancestors()
-                                            .OfType<BlockSyntax>()
-                                            .FirstOrDefault();
-                if (parentBlock != null)
-                {
-                    foundBlock = GetLocalDeclaration(parentBlock, identifierString);
-                }
-            }
-
-            return foundBlock;
-        }
+        }         
     }
 }

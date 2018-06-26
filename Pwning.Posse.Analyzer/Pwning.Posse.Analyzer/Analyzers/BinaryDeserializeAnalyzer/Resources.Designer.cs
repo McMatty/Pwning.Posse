@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Pwning.Posse.Tracker.Analyzers.JsonDeserializeTracker {
+namespace Pwning.Posse.Analyzer.Analyzers.BinaryDeserializeAnalyzer {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace Pwning.Posse.Tracker.Analyzers.JsonDeserializeTracker {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Pwning.Posse.Tracker.Analyzers.JsonDeserializeTracker.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Pwning.Posse.Analyzer.Analyzers.BinaryDeserializeAnalyzer.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -61,7 +61,7 @@ namespace Pwning.Posse.Tracker.Analyzers.JsonDeserializeTracker {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to JsonConvert settings doesn&apos;t has no assigned SerializationBinder.
+        ///   Looks up a localized string similar to BinaryFormatter doesn&apos;t implement a binder.
         /// </summary>
         internal static string AnalyzerDescription {
             get {
@@ -70,7 +70,7 @@ namespace Pwning.Posse.Tracker.Analyzers.JsonDeserializeTracker {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to JsonConvert possibly vulnerable to a deserialization attack.
+        ///   Looks up a localized string similar to BinaryFormatter is possibly vulnerable to a deserialization attack.
         /// </summary>
         internal static string AnalyzerMessageFormat {
             get {

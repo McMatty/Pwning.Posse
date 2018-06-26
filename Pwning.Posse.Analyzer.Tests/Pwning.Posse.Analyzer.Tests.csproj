@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Pwning.Posse.Analyzer\Pwning.Posse.Analyzer\Pwning.Posse.Tracker.csproj" />
+    <ProjectReference Include="..\Pwning.Posse.Analyzer\Pwning.Posse.Analyzer\Pwning.Posse.Analyzer.csproj" />
   </ItemGroup>
 
 </Project>

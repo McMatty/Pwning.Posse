@@ -228,9 +228,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Pwning.Posse.Analyzer\Pwning.Posse.Analyzer\Pwning.Posse.Tracker.csproj">
+    <ProjectReference Include="..\Pwning.Posse.Analyzer\Pwning.Posse.Analyzer\Pwning.Posse.Analyzer.csproj">
       <Project>{49a0dd1d-5cec-4fab-a539-1100824859bc}</Project>
-      <Name>Pwning.Posse.Tracker</Name>
+      <Name>Pwning.Posse.Analyzer</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

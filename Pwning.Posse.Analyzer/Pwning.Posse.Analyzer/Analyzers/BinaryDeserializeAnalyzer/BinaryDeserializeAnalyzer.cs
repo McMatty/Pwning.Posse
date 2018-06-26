@@ -1,15 +1,15 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Pwning.Posse.Analyzer.Analyzers.BinaryDeserializeAnalyzer;
 using Pwning.Posse.Common;
-using Pwning.Posse.Tracker.Analyzers.BinaryDeserializeTracker;
 using System.Collections.Immutable;
 using System.Linq;
 
-namespace Pwning.Posse.Tracker
+namespace Pwning.Posse.Analyzer
 {
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public class BinaryDeserializeTracker : DiagnosticAnalyzer
+    public class BinaryDeserializeAnalyzer : DiagnosticAnalyzer
     {
         private const string _namespace     = "System.Runtime.Serialization.Formatters.Binary.BinaryFormatter";
         private const string _methodName    = "Deserialize";

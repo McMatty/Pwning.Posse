@@ -2,16 +2,16 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using Pwning.Posse.Analyzer.Analyzers.JsonDeserializeAnalyzer;
 using Pwning.Posse.Common;
-using Pwning.Posse.Tracker.Analyzers.JsonDeserializeTracker;
 using System;
 using System.Collections.Immutable;
 using System.Linq;
 
-namespace Pwning.Posse.Tracker
+namespace Pwning.Posse.Analyzer
 {
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public class JsonDeserializeTracker : DiagnosticAnalyzer
+    public class JsonDeserializeAnalyzer : DiagnosticAnalyzer
     {
         private const string _typeName                                  = "TypeNameHandling";
         private static readonly string[] _vulnerabletypeNameSettings    =  {"TypeNameHandling.Auto",  "TypeNameHandling.Objects", "TypeNameHandling.All"};       
@@ -36,25 +36,7 @@ namespace Pwning.Posse.Tracker
         public override void Initialize(AnalysisContext context)
         {
             context.RegisterSyntaxNodeAction(AnalyzeSyntax, SyntaxKind.InvocationExpression);
-        }        
-
-        //Checks that argument being assigned is being assigned a class that implements the ISerializationBinder interface
-        //TODO: Very brittle check - should be updated later
-        private static bool IsAssignedSerialBinder(SyntaxNode argument, SyntaxNodeAnalysisContext context)
-        {
-            if (argument == null) return false;
-
-            return argument.DescendantNodesAndSelf()
-                            .OfType<AssignmentExpressionSyntax>()
-                            .Any(x =>
-                            {
-                                var symbol      = context.SemanticModel.GetSymbolInfo(x.Right).Symbol;
-                                if (symbol == null) return false;
-
-                                var symbolType = StaticAnalysisUtilites.GetTypeFromDeclaration(symbol);
-                                return symbolType.AllInterfaces.Any(@interface => @interface.OriginalDefinition.ToDisplayString().Equals(_binderInterface));
-                            });
-        }
+        }                
 
         //This will evaluate code created with an inline constructor to assigned properties for a JsonSerializerSettings
         //e.g Deserialize(payload, new JsonSerializerSettings(){TypeNameHandling = TypeNameHandling.Auto})
@@ -68,7 +50,7 @@ namespace Pwning.Posse.Tracker
             if (settingsArgument != null && settingsArgument.IsKind(SyntaxKind.ObjectCreationExpression))
             {
                 var hasAutoTypeSetting  = StaticAnalysisUtilites.IsAssignedValue(settingsArgument, _typeName, _vulnerabletypeNameSettings);
-                var hasSerialBinder     = IsAssignedSerialBinder(settingsArgument, context);
+                var hasSerialBinder     = StaticAnalysisUtilites.IsAssignedInterface(settingsArgument, context, _binderInterface);
                 isVulnerable            = hasAutoTypeSetting && !hasSerialBinder;
             }
 
@@ -94,7 +76,7 @@ namespace Pwning.Posse.Tracker
                     var location            = (declaration as IFieldSymbol).Locations.First();
                     var declearationNode    = StaticAnalysisUtilites.FindDeclearationNode(location);
                     var hasAutoTypeSetting  = StaticAnalysisUtilites.IsAssignedValue(declearationNode, _typeName, _vulnerabletypeNameSettings);
-                    var hasSerialBinder     = IsAssignedSerialBinder(declearationNode, context);
+                    var hasSerialBinder     = StaticAnalysisUtilites.IsAssignedInterface(declearationNode, context, _binderInterface);
                     isVulnerable            = hasAutoTypeSetting && !hasSerialBinder;
                 }
             }
@@ -121,7 +103,7 @@ namespace Pwning.Posse.Tracker
                     var typeHandlerSetting  = StaticAnalysisUtilites.FindLocalAssignmentExpressionSyntax(location, _typeName);
                     var binderSetting       = StaticAnalysisUtilites.FindLocalAssignmentExpressionSyntax(location, _binderSetting);
                     var hasAutoTypeSetting  = StaticAnalysisUtilites.IsAssignedValue(typeHandlerSetting, _typeName, _vulnerabletypeNameSettings);
-                    var hasSerialBinder     = IsAssignedSerialBinder(binderSetting, context);
+                    var hasSerialBinder     = StaticAnalysisUtilites.IsAssignedInterface(binderSetting, context, _binderInterface);
                     isVulnerable            = hasAutoTypeSetting && !hasSerialBinder;
                 }
             }

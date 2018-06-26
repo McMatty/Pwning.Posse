@@ -7,9 +7,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pwning.Posse.Common", "Pwni
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pwning.Posse.CommandLine", "Pwning.Posse.Console\Pwning.Posse.CommandLine.csproj", "{4DDBEA4C-8A9E-44EF-A5FF-CA6BCA8754F7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pwning.Posse.Tracker", "Pwning.Posse.Analyzer\Pwning.Posse.Analyzer\Pwning.Posse.Tracker.csproj", "{49A0DD1D-5CEC-4FAB-A539-1100824859BC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pwning.Posse.Analyzer", "Pwning.Posse.Analyzer\Pwning.Posse.Analyzer\Pwning.Posse.Analyzer.csproj", "{49A0DD1D-5CEC-4FAB-A539-1100824859BC}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pwning.Posse.Analyzer.Tests", "Pwning.Posse.Analyzer.Tests\Pwning.Posse.Analyzer.Tests.csproj", "{B969AB18-1986-40AE-AF82-8C61056B47E3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pwning.Posse.Common.Tests", "Pwning.Posse.Common.Tests\Pwning.Posse.Common.Tests.csproj", "{D123BF1C-CC76-48EE-A9C6-0A71B4CC6C28}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{B969AB18-1986-40AE-AF82-8C61056B47E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B969AB18-1986-40AE-AF82-8C61056B47E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B969AB18-1986-40AE-AF82-8C61056B47E3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D123BF1C-CC76-48EE-A9C6-0A71B4CC6C28}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D123BF1C-CC76-48EE-A9C6-0A71B4CC6C28}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D123BF1C-CC76-48EE-A9C6-0A71B4CC6C28}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D123BF1C-CC76-48EE-A9C6-0A71B4CC6C28}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
