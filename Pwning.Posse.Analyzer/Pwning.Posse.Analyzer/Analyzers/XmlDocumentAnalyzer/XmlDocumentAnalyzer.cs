@@ -2,7 +2,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
-using Pwning.Posse.Analyzer.Analyzers.XXEAnalyzer;
+using Pwning.Posse.Analyzer.Analyzers.XmlDocumentAnalyzer;
 using Pwning.Posse.Common;
 using System.Collections.Immutable;
 using System.Linq;
@@ -10,7 +10,7 @@ using System.Linq;
 namespace Pwning.Posse.Analyzer
 {
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public class XXEAnalyzer : DiagnosticAnalyzer
+    public class XmlDocumentAnalyzer : DiagnosticAnalyzer
     {
         private static string _namespace            = "System.Xml.XmlDocument";
         private static string _methodName           = "LoadXml";

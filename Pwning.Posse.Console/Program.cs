@@ -24,7 +24,7 @@ namespace Pwning.Posse.CommandLine
         public static extern bool ShowWindow(System.IntPtr hWnd, int cmdShow);
 
         //TODO:IOC or reflection to load all analyzers   
-        private static List<DiagnosticAnalyzer> _analyzers = new List<DiagnosticAnalyzer>() { new BinaryDeserializeAnalyzer(), new XXEAnalyzer(), new JsonDeserializeAnalyzer() };
+        private static List<DiagnosticAnalyzer> _analyzers = new List<DiagnosticAnalyzer>() { new BinaryDeserializeAnalyzer(), new XmlDocumentAnalyzer(), new JsonDeserializeAnalyzer(), new CommandInjectionAnalyzer() };
 
         static void MaximizeWindow()
         {
@@ -163,16 +163,16 @@ namespace Pwning.Posse.CommandLine
             string decompileDirectory = string.Empty;
             if (File.Exists(assemblyFileName))
             {
-                decompileDirectory = FileUtilities.GetDecompileDirectory(assemblyFileName, false);
-                ModuleDefinition module = null;
-                WholeProjectDecompiler decompiler = null;
+                decompileDirectory                  = FileUtilities.GetDecompileDirectory(assemblyFileName, false);
+                ModuleDefinition module             = null;
+                WholeProjectDecompiler decompiler   = null;
 
                 if (Directory.Exists(decompileDirectory) && Directory.GetFiles(decompileDirectory).Count() > 0)
                 {
-                    module = UniversalAssemblyResolver.LoadMainModule(assemblyFileName, false);
-                    decompiler = new WholeProjectDecompiler();
-                    decompiler.Settings.ThrowOnAssemblyResolveErrors = false;
-                    decompileDirectory = FileUtilities.GetDecompileDirectory(assemblyFileName, false);
+                    module                                              = UniversalAssemblyResolver.LoadMainModule(assemblyFileName, false);
+                    decompiler                                          = new WholeProjectDecompiler();
+                    decompiler.Settings.ThrowOnAssemblyResolveErrors    = false;
+                    decompileDirectory                                  = FileUtilities.GetDecompileDirectory(assemblyFileName, false);
 
                     if (Directory.Exists(decompileDirectory) && Directory.GetFiles(decompileDirectory).Count() > 0)
                     {
@@ -183,7 +183,6 @@ namespace Pwning.Posse.CommandLine
                     {
                         Directory.CreateDirectory(decompileDirectory);
                     }
-
 
                     try
                     {
@@ -239,10 +238,8 @@ namespace Pwning.Posse.CommandLine
             {
                 try
                 {
-                    var project = msWorkspace.OpenProjectAsync(x).Result;
-                   
+                    var project = msWorkspace.OpenProjectAsync(x).Result;                   
                     ConsoleOutput.SystemMessage($"Inspecting project {project.FilePath}");
-
                     var compilationWithAnalyzers = project.GetCompilationAsync().Result.WithAnalyzers(_analyzers.ToImmutableArray());
                     issueList.AddRange(compilationWithAnalyzers.GetAnalyzerDiagnosticsAsync().Result);
                 }

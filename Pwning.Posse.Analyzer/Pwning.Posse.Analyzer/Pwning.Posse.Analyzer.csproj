@@ -44,7 +44,12 @@
     <EmbeddedResource Update="Analyzers\JsonDeserializeAnalyzer\Resources.resx" Generator="ResXFileCodeGenerator" LastGenOutput="Resources.Designer.cs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
-    <EmbeddedResource Update="Analyzers\XXEAnalyzer\Resources.resx">
+    <EmbeddedResource Update="Analyzers\CommandInjectionAnalyzer\Resources.resx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <Generator>ResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Analyzers\XmlDocumentAnalyzer\Resources.resx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <Generator>ResXFileCodeGenerator</Generator>
@@ -71,7 +76,12 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Update="Analyzers\XXEAnalyzer\Resources.Designer.cs">
+    <Compile Update="Analyzers\CommandInjectionAnalyzer\Resources.Designer.cs">
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+    </Compile>
+    <Compile Update="Analyzers\XmlDocumentAnalyzer\Resources.Designer.cs">
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>

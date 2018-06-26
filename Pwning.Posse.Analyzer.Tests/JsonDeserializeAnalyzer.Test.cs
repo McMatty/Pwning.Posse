@@ -8,7 +8,7 @@ using Pwning.Posse.Analyzer;
 namespace Pwning.Posse.Analyzer.Tests
 {
     [TestClass]
-    public class JsonDeserializeTrackerTest : CodeFixVerifier
+    public class JsonDeserializeAnalyzerTest : CodeFixVerifier
     {
         //No diagnostics expected to show up
         [TestMethod]

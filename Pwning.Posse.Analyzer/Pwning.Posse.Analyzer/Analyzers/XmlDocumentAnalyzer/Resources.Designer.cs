@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Pwning.Posse.Analyzer.Analyzers.XXEAnalyzer {
+namespace Pwning.Posse.Analyzer.Analyzers.XmlDocumentAnalyzer {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace Pwning.Posse.Analyzer.Analyzers.XXEAnalyzer {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Pwning.Posse.Analyzer.Analyzers.XXEAnalyzer.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Pwning.Posse.Analyzer.Analyzers.XmlDocumentAnalyzer.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;

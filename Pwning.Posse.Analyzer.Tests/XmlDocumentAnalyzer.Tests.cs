@@ -7,7 +7,7 @@ using System;
 namespace Pwning.Posse.Analyzer.Tests
 {
     [TestClass]
-    public class XXETrackerTest : CodeFixVerifier
+    public class XmlDocumentAnalyzerTests : CodeFixVerifier
     {
         //No diagnostics expected to show up
         [TestMethod]
@@ -184,7 +184,7 @@ namespace ConsoleApplication1
 
         protected override DiagnosticAnalyzer GetCSharpDiagnosticAnalyzer()
         {
-            return new XXEAnalyzer();
+            return new XmlDocumentAnalyzer();
         }
     }
 }
