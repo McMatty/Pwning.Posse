@@ -9,7 +9,7 @@ namespace ConsoleApplication1
 {
     class TypeName
     {  
-        static void TypeName()
+        static TypeName()
         {
             GetDeserializedObject("payload");
         }
