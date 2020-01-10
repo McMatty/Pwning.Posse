@@ -11,7 +11,7 @@ namespace ConsoleApplication1
     {  
         static void  Main(string[] args)
         {
-            GetDeserializedObject(""payload"");
+            GetDeserializedObject("payload");
         }
         public static void GetDeserializedObject(string payload)
         {
