@@ -7,6 +7,7 @@ using System.Diagnostics;
 using Newtonsoft.Json;
 namespace ConsoleApplication1
 {
+    //Should find this vulnerability
     class TypeName
     {  
         static TypeName()
