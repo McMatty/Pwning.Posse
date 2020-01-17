@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: circleci/android
+      - image: circleci/openjdk:9.0-jdk
     steps:
       - checkout
       - run:
