@@ -13,6 +13,13 @@ jobs:
       - run:
           name: "Install project dependencies"
           command: nuget restore      
-      - run:
-          name: "Run Build step"
-          command: dotnet build
+      - sonarcloud/scan
+
+orbs:
+  sonarcloud: sonarsource/sonarcloud@1.0.1
+
+workflows:
+  main:
+    jobs:
+      - build:
+          context: SonarCloud
