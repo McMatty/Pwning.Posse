@@ -1,9 +1,10 @@
 version: 2.1
 
 jobs:
-  build:
-    docker:
-      - image: circleci/openjdk:9.0-jdk
+  build:    
+    executor:
+      name: win/vs2019
+      shell: powershell.exe
     steps:
       - checkout
       - run:
@@ -13,6 +14,7 @@ jobs:
 
 orbs:
   sonarcloud: sonarsource/sonarcloud@1.0.1
+  win: circleci/windows@1.0.0
 
 workflows:
   main:
