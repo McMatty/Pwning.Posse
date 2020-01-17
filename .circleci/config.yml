@@ -20,4 +20,6 @@ workflows:
   main:
     jobs:
       - build:
+          executor:
+          shell: bash
           context: SonarCloud
