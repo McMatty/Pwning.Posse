@@ -1,20 +1,18 @@
 version: 2.1
 
-orbs:
-  win: circleci/windows@1.0.0
-  sonarcloud: sonarsource/sonarcloud@1.0.1
-
 jobs:
   build:
-    executor:
-      name: win/vs2019
-      shell: powershell.exe
+    docker:
+      - image: circleci/android
     steps:
-      - checkout      
+      - checkout
       - run:
-          name: "Install project dependencies"
-          command: nuget restore      
+          name: Install dependencies and build project
+          command: nuget restore
       - sonarcloud/scan
+
+orbs:
+  sonarcloud: sonarsource/sonarcloud@1.0.1
 
 workflows:
   main:
