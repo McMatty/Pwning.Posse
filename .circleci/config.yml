@@ -2,6 +2,7 @@ version: 2.1
 
 orbs:
   win: circleci/windows@1.0.0
+  sonarcloud: sonarsource/sonarcloud@1.0.1
 
 jobs:
   build:
@@ -14,9 +15,6 @@ jobs:
           name: "Install project dependencies"
           command: nuget restore      
       - sonarcloud/scan
-
-orbs:
-  sonarcloud: sonarsource/sonarcloud@1.0.1
 
 workflows:
   main:
