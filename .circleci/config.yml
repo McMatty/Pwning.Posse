@@ -1,18 +1,10 @@
 version: 2.1
 
-orbs: 
-  win: circleci/windows@1.0.0
-
 jobs:
-  build:    
-    executor:
-      name: win/vs2019
-      shell: powershell.exe
+  build:
+    docker:
+      - image: aparker/circleci-dotnet-mono:latest
     steps:
       - checkout
-      - run:
-          name: Install dependencies and build project
-          command: nuget restore
-      - run:
-          name: Test arbitary commands
-          command: whoami
+      - run: msbuild /t:Restore
+      - run: msbuild /t:Build
