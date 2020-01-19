@@ -6,7 +6,7 @@ jobs:
       - image: aparker/circleci-dotnet-mono:latest
     steps:
       - checkout
-      - run: apt-get install unzip
+      - run: apt-get update && apt-get install unzip -y
       - run: nuget restore
       - sonarcloud/scan
 
