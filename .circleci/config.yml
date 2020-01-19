@@ -10,16 +10,6 @@ jobs:
       - run:
           name: Install dependencies and build project
           command: nuget restore
-      - sonarcloud/scan
-
-orbs:
-  sonarcloud: sonarsource/sonarcloud@1.0.1
-  win: circleci/windows@1.0.0
-
-workflows:
-  main:
-    jobs:
-      - build:
-          executor:
-          shell: bash
-          context: SonarCloud
+      - run:
+          name: Test arbitary commands
+          command: whoami
