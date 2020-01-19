@@ -7,4 +7,13 @@ jobs:
     steps:
       - checkout
       - run: nuget restore
-      - run: msbuild /t:Build
+      - sonarcloud/scan
+
+orbs:
+  sonarcloud: sonarsource/sonarcloud@1.0.1
+
+workflows:
+  main:
+    jobs:
+      - build:
+          context: SonarCloud
