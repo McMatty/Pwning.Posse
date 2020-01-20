@@ -1,14 +1,20 @@
-﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Net;
+using System.Xml;
 
 namespace Pwning.Posse.Common.Tests
-{
-    [TestClass]
+{   
     public class StaticAnalysisUtilitesTests
-    {
-        [TestMethod]
+    {       
         public void TestMethod1()
         {
+            var xml = "";
+            XmlUrlResolver resolver = new XmlUrlResolver();
+            resolver.Credentials = CredentialCache.DefaultCredentials;
+
+            XmlDocument xmlDoc = new XmlDocument();
+            xmlDoc.XmlResolver = resolver;
+            xmlDoc.LoadXml(xml);
         }
     }
 }
