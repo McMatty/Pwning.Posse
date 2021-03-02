@@ -242,32 +242,7 @@ jobs:
       arguments: '--no-build -c Release -o packages\ExtensionsMetadataGenerator $(emgSuffixSwitch)'
       projects: |
         **\ExtensionsMetadataGenerator.csproj
-        steps:
-  - task: SFP.build-tasks.custom-build-task-1.EsrpCodeSigning@1
-    displayName: 'ESRP CodeSigning: Nupkg'
-    inputs:
-      ConnectedServiceName: 'ESRP Service'
-      FolderPath: 'packages\ExtensionsMetadataGenerator'
-      Pattern: 'Microsoft.Azure.WebJobs.Script.ExtensionsMetadataGenerator*.nupkg'
-      signConfigType: inlineSignParams
-      inlineOperation: |
-       [
-           {
-             "KeyCode": "CP-401405",
-             "OperationCode": "NuGetSign",
-             "Parameters": {},
-             "ToolName": "sign",
-             "ToolVersion": "1.0"
-           },
-           {
-             "KeyCode": "CP-401405",
-             "OperationCode": "NuGetVerify",
-             "Parameters": {},
-             "ToolName": "sign",
-             "ToolVersion": "1.0"
-           }
-       ]
-    condition: and(succeeded(), startsWith(variables['SignArtifacts'], 'true'))
+        steps:  
   - task: DeleteFiles@1
     displayName: 'Delete CodeSignSummary files'
     inputs:
